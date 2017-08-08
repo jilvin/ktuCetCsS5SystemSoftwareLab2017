@@ -3,17 +3,19 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 int choice = 3;
 
 struct process
 {
-  int processID;
+  int integerData[4];
   char processName[32];
-  int jobEntryTime;
-  int jobBurstTime; //burstTime
-  int priority;
   struct process* nextProcess;
+  // int processID;
+  // int jobEntryTime;
+  // int jobBurstTime; //burstTime
+  // int priority;
 };
 
 struct process* startPointer=NULL;
@@ -25,13 +27,13 @@ void clearScreen()
 
 void listProcess(struct process* pointer)
 {
-  printf("processID\t:\t%d\nprocessName\t:\t%s\npriority\t:\t%d\njobEntryTime\t:\t%d\njobBurstTime\t:\t%d\n\n",pointer->processID,pointer->processName,pointer->priority,pointer->jobEntryTime,pointer->jobBurstTime);
+  printf("processID\t:\t%d\nprocessName\t:\t%s\npriority\t:\t%d\njobEntryTime\t:\t%d\njobBurstTime\t:\t%d\n\n",pointer->integerData[0],pointer->processName,pointer->integerData[3],pointer->integerData[1],pointer->integerData[2]);
 }
 
-void listAllProcesses()
+void listAllProcesses(struct process* recievedStartPointer)
 {
-  clearScreen();
-  struct process* pointer = startPointer;
+  // clearScreen();
+  struct process* pointer = recievedStartPointer;
   if(pointer!=NULL)
   {
     while(pointer->nextProcess!=NULL)
@@ -47,86 +49,95 @@ void listAllProcesses()
   }
 }
 
-void deleteProcessPrompt()
+struct process* deleteProcess(int processID, struct process* startPointer)
 {
-  clearScreen();
-  int processID, processFound=0;
+  int processFound=0;
   struct process* pointer = startPointer;
   struct process* pointerBack = NULL;
-  if(pointer!=NULL)
+  if(pointer->nextProcess == NULL)
   {
-    printf("Enter processID of the process to be deleted:\n");
-    scanf("%d",&processID);
-    if(pointer->nextProcess == NULL)
+    if(pointer->integerData[0] == processID)
     {
-      if(pointer->processID == processID)
+      processFound = 1;
+    }
+  }
+  else
+  {
+    while(pointer->nextProcess!=NULL && processFound == 0)
+    {
+      if(pointer->integerData[0] == processID)
+      {
+        processFound = 1;
+      }
+      else
+      {
+        if(pointerBack != NULL)
+        {
+          pointerBack = pointerBack->nextProcess;
+        }
+        pointer = pointer->nextProcess;
+      }
+      if(pointer == startPointer->nextProcess)
+      {
+        pointerBack = startPointer;
+      }
+    }
+    if(pointer->nextProcess == NULL && processFound == 0)
+    {
+      // case of last element
+      if(pointer->integerData[0] == processID)
       {
         processFound = 1;
       }
     }
-    else
+  }
+  if(processFound == 1)
+  {
+    if(pointerBack == NULL)
     {
-      while(pointer->nextProcess!=NULL && processFound == 0)
+      // first element is to be deleted
+      if(pointer->nextProcess == NULL)
       {
-        if(pointer->processID == processID)
-        {
-          processFound = 1;
-        }
-        else
-        {
-          if(pointerBack != NULL)
-          {
-            pointerBack = pointerBack->nextProcess;
-          }
-          pointer = pointer->nextProcess;
-        }
-        if(pointer == startPointer->nextProcess)
-        {
-          pointerBack = startPointer;
-        }
-      }
-      if(pointer->nextProcess == NULL && processFound == 0)
-      {
-        // case of last element
-        if(pointer->processID == processID)
-        {
-          processFound = 1;
-        }
-      }
-    }
-    if(processFound == 1)
-    {
-      if(pointerBack == NULL)
-      {
-        // first element is to be deleted
-        if(pointer->nextProcess == NULL)
-        {
-          // single element
-          startPointer = NULL;
-        }
-        else
-        {
-          startPointer = pointer->nextProcess;
-        }
-      }
-      else if(pointer->nextProcess == NULL)
-      {
-        // case of last element
-        pointerBack->nextProcess = NULL;
+        // single element
+        startPointer = NULL;
       }
       else
       {
-        pointerBack->nextProcess = pointer->nextProcess;
+        startPointer = pointer->nextProcess;
       }
-      free(pointer);
-      // clearScreen();
-      printf("Process with processID %d deleted successfully.\n\n", processID);
     }
-    else if(processFound == 0)
+    else if(pointer->nextProcess == NULL)
     {
-      // clearScreen();
-      printf("Error: Process with processID %d not found.\n\n",processID);
+      // case of last element
+      pointerBack->nextProcess = NULL;
     }
+    else
+    {
+      pointerBack->nextProcess = pointer->nextProcess;
+    }
+    free(pointer);
+    // clearScreen();
+    // printf("Process with processID %d deleted successfully.\n\n", processID);
+    return startPointer;
+  }
+  else if(processFound == 0)
+  {
+    // clearScreen();
+    printf("Error: Process with processID %d not found.\n\n",processID);
+  }
+}
+
+void deleteProcessPrompt()
+{
+  clearScreen();
+  int processID;
+  struct process* pointer = startPointer;
+  if(pointer!=NULL)
+  {
+    printf("Enter processID of the process to be deleted:\n");
+    scanf("%d",&processID);
+    startPointer = deleteProcess(processID, startPointer);
+    printf("Process with processID %d deleted successfully.\n\n", processID);
   }
   else
   {
@@ -140,11 +151,11 @@ void newProcess()
   int processNo;
   struct process* pointer = startPointer;
   struct process* savePointer = NULL;
-  if(pointer != NULL && pointer->processID == 1)
+  if(pointer != NULL && pointer->integerData[0] == 1)
   {
     while(pointer->nextProcess != NULL && savePointer == NULL)
     {
-      if(pointer->processID+1 == pointer->nextProcess->processID)
+      if(pointer->integerData[0]+1 == pointer->nextProcess->integerData[0])
       {
         pointer = pointer->nextProcess;
       }
@@ -155,7 +166,7 @@ void newProcess()
     }
     //reached end of list
     pointer->nextProcess = malloc(sizeof(struct process));
-    processNo = pointer->processID;
+    processNo = pointer->integerData[0];
     pointer = pointer->nextProcess;
   }
   else if(pointer != NULL)
@@ -171,15 +182,16 @@ void newProcess()
     startPointer = pointer;
     processNo = 0;
   }
-  pointer->processID = ++processNo;
+  pointer->integerData[0] = ++processNo;
   printf("Enter processName:\n");
   scanf("%s",&(pointer->processName[0]));
   printf("Enter priority:\n");
-  scanf("%d",&(pointer->priority));
-  printf("Enter jobEntryTime:\n");
-  scanf("%d",&(pointer->jobEntryTime));
+  scanf("%d",&(pointer->integerData[3]));
+  // printf("Enter jobEntryTime:\n");
+  // scanf("%d",&(pointer->integerData[1]));
+  pointer->integerData[1] = 0;
   printf("Enter jobBurstTime:\n");
-  scanf("%d",&(pointer->jobBurstTime));
+  scanf("%d",&(pointer->integerData[2]));
   clearScreen();
   printf("Process Details:\n\n");
   listProcess(pointer);
@@ -193,25 +205,278 @@ void newProcess()
   }
 }
 
+void copyProcessStructure(struct process* copyPointer, struct process* originalPointer)
+{
+  // copying starts here
+  if(copyPointer == NULL)
+  {
+    copyPointer = malloc(sizeof(struct process));
+  }
+  for(int i=0; i<4; i++)
+  {
+    copyPointer->integerData[i] = originalPointer->integerData[i];
+  }
+  strcpy(copyPointer->processName, originalPointer->processName);
+}
+
+void copyProcessStructureUsingProcessID(struct process* pointer, int lessValueProcessID)
+{
+  struct process* movePointer = startPointer;
+  int flag = 0;
+  while(movePointer != NULL && flag == 0)
+  {
+    if(movePointer->integerData[0] == lessValueProcessID)
+    {
+      flag = 1;
+    }
+    if(flag == 0)
+    {
+      movePointer=movePointer->nextProcess;
+    }
+  }
+  // copying starts here
+  for(int i=0; i<4; i++)
+  {
+    pointer->integerData[i] = movePointer->integerData[i];
+  }
+  strcpy(pointer->processName, movePointer->processName);
+  pointer->nextProcess = movePointer->nextProcess;
+  // printf("just checking\n");
+}
+
+struct process* copyList(struct process* copyList, struct process* originalList, int isCopyListEmpty)
+{
+  struct process* copyListPointer = copyList;
+  struct process* copyStartPointer = copyListPointer;
+  struct process* pointer = originalList;
+  struct process* backPointer = NULL;
+  int runOnce = 0;
+  if(isCopyListEmpty == 1)
+  {
+    while(pointer != NULL)
+    {
+      if(runOnce == 1)
+      {
+        copyListPointer = malloc(sizeof(struct process));
+        backPointer->nextProcess = copyListPointer;
+      }
+      copyProcessStructure(copyListPointer, pointer);
+      // printf("no issue till here\n");
+      backPointer = copyListPointer;
+      pointer = pointer->nextProcess;
+      if(runOnce == 0)
+      {
+        runOnce = 1;
+      }
+    }
+    return copyStartPointer;
+  }
+}
+
+struct process* makeListSort(int value)
+{
+  struct process* returnStartPointer = NULL;
+  struct process* pointer = NULL;
+  struct process* savePointer = NULL;
+  struct process* copyStartPointer = NULL;
+  int lessValue;
+  int lessValueProcessID;
+  int lessFound;
+  struct process* movePointer = NULL;
+  copyStartPointer = malloc(sizeof(struct process));
+  copyStartPointer = copyList(copyStartPointer, startPointer, 1);
+  // listAllProcesses(copyStartPointer);
+  // printf("i checked here\n");
+  // copyStartPointer = startPointer;
+  if(copyStartPointer != NULL)
+  {
+    lessValue = copyStartPointer->integerData[value];
+    lessValueProcessID = copyStartPointer->integerData[0];
+    do
+    {
+      // printf("%d\n",lessValue);
+      movePointer = copyStartPointer;
+      lessFound = 0;
+      while(movePointer != NULL)
+      {
+        if(lessValue >= movePointer->integerData[value])
+        {
+          lessValue = movePointer->integerData[value];
+          lessValueProcessID = movePointer->integerData[0];
+          lessFound = 1;
+        }
+        movePointer = movePointer->nextProcess;
+      }
+      // printf("lessValue:%d\nlessValueProcessID:%d\n",lessValue,lessValueProcessID);
+      if(lessFound == 1)
+      {
+        if(pointer != NULL)
+        {
+          savePointer = pointer;
+        }
+        pointer = malloc(sizeof(struct process));
+        if(savePointer != NULL) // && savePointer != copyStartPointer)
+        {
+          savePointer->nextProcess = pointer;
+        }
+        if(returnStartPointer == NULL)
+        {
+          returnStartPointer = pointer;
+        }
+        copyProcessStructureUsingProcessID(pointer, lessValueProcessID);
+        copyStartPointer = deleteProcess(lessValueProcessID, copyStartPointer);
+        if(copyStartPointer != NULL)
+        {
+          lessValue = copyStartPointer->integerData[value];
+          lessValueProcessID = copyStartPointer->integerData[0];
+        }
+        // listAllProcesses(copyStartPointer);
+      }
+    } while(copyStartPointer != NULL);
+    // printf("works here\n");
+    pointer->nextProcess = NULL;
+    return returnStartPointer;
+  }
+  else
+  {
+    printf("Error: No processes found.\n\n");
+    return NULL;
+  }
+}
+
+int sumOfWaitingTimeCalc(struct process* pointer)
+{
+  struct process* copyStartPointer = pointer;
+  int sumOfWaitingTime = 0, avgWaitingTime = 0, count = 0;
+  while(pointer != NULL)
+  {
+    if(pointer->nextProcess != NULL)
+    {
+      sumOfWaitingTime = (2 * sumOfWaitingTime) + pointer->integerData[2];
+    }
+    pointer = pointer->nextProcess;
+  }
+  return sumOfWaitingTime;
+}
+
+void calcAndPrintAverageTurnAroundTime(struct process* pointer)
+{
+  int sumOfWaitingTime=0, sumOfTurnAroundTime = 0, sumOfBurstTime = 0,avgTurnAroundTime = 0, count = 0;
+  sumOfWaitingTime = sumOfWaitingTimeCalc(pointer);
+  while(pointer != NULL)
+  {
+    count++;
+    sumOfBurstTime = sumOfBurstTime + pointer->integerData[2];
+    pointer = pointer->nextProcess;
+  }
+  sumOfTurnAroundTime = sumOfWaitingTime + sumOfBurstTime;
+  avgTurnAroundTime = (sumOfTurnAroundTime/count);
+  printf("Average Turn Around Time\t:\t%d\n",avgTurnAroundTime);
+}
+
+void calcAndPrintAverageWaitingTime(struct process* pointer)
+{
+  int sumOfWaitingTime = 0 , avgWaitingTime = 0, count = 0;
+  sumOfWaitingTime = sumOfWaitingTimeCalc(pointer);
+  while(pointer != NULL)
+  {
+    count++;
+    pointer = pointer->nextProcess;
+  }
+  avgWaitingTime = (sumOfWaitingTime/count);
+  printf("Average Waiting Time\t:\t%d\n",avgWaitingTime);
+}
+
 void fcfs_non_premptive()
 {
   clearScreen();
-  printf("fcfs\n");
+  // First Come First Serve - Non Premptive
+  struct process* pointer = NULL;
+  if(startPointer != NULL)
+  {
+    // 1 - jobEntryTime
+    pointer = makeListSort(1);
+    if(pointer != NULL)
+    {
+      listAllProcesses(pointer);
+      calcAndPrintAverageTurnAroundTime(pointer);
+      calcAndPrintAverageWaitingTime(pointer);
+      printf("\n");
+    }
+  }
+  else
+  {
+    printf("Error: No processes found.\n\n");
+  }
 }
 
 void sjf_non_premptive()
 {
   clearScreen();
+  // printf("sjf\n");
+  struct process* pointer = NULL;
+  if(startPointer != NULL)
+  {
+    // 1 - jobEntryTime
+    pointer = makeListSort(2);
+    if(pointer != NULL)
+    {
+      listAllProcesses(pointer);
+      calcAndPrintAverageTurnAroundTime(pointer);
+      calcAndPrintAverageWaitingTime(pointer);
+      printf("\n");
+    }
+  }
+  else
+  {
+    printf("Error: No processes found.\n\n");
+  }
 }
 
 void round_robin_non_premptive()
 {
   clearScreen();
+  // printf("round robin\n");
+  struct process* pointer = NULL;
+  if(startPointer != NULL)
+  {
+    // 1 - jobEntryTime
+    pointer = makeListSort(1);
+    if(pointer != NULL)
+    {
+      listAllProcesses(pointer);
+      calcAndPrintAverageTurnAroundTime(pointer);
+      calcAndPrintAverageWaitingTime(pointer);
+      printf("\n");
+    }
+  }
+  else
+  {
+    printf("Error: No processes found.\n\n");
+  }
 }
 
 void priority_non_premptive()
 {
   clearScreen();
+  // printf("priority\n");
+  struct process* pointer = NULL;
+  if(startPointer != NULL)
+  {
+    // 1 - jobEntryTime
+    pointer = makeListSort(3);
+    if(pointer != NULL)
+    {
+      listAllProcesses(pointer);
+      calcAndPrintAverageTurnAroundTime(pointer);
+      calcAndPrintAverageWaitingTime(pointer);
+      printf("\n");
+    }
+  }
+  else
+  {
+    printf("Error: No processes found.\n\n");
+  }
 }
 
 void processDataManagerMenu()
@@ -226,7 +491,7 @@ void processDataManagerMenu()
     {
       case 1: newProcess();
       break;
-      case 2: listAllProcesses();
+      case 2: listAllProcesses(startPointer);
       break;
       case 3: deleteProcessPrompt();
       break;
