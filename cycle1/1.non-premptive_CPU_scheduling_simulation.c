@@ -344,10 +344,11 @@ struct process* makeListSort(int value)
   }
 }
 
-int sumOfWaitingTimeCalc(struct process* pointer)
+float sumOfWaitingTimeCalc(struct process* pointer)
 {
   struct process* copyStartPointer = pointer;
-  int sumOfWaitingTime = 0, avgWaitingTime = 0, count = 0;
+  float sumOfWaitingTime = 0.0, avgWaitingTime = 0.0;
+  int count = 0;
   while(pointer != NULL)
   {
     if(pointer->nextProcess != NULL)
@@ -361,7 +362,8 @@ int sumOfWaitingTimeCalc(struct process* pointer)
 
 void calcAndPrintAverageTurnAroundTime(struct process* pointer)
 {
-  int sumOfWaitingTime=0, sumOfTurnAroundTime = 0, sumOfBurstTime = 0,avgTurnAroundTime = 0, count = 0;
+  float sumOfWaitingTime=0.0, sumOfTurnAroundTime = 0.0, sumOfBurstTime = 0.0, avgTurnAroundTime = 0.0;
+  int count = 0;
   sumOfWaitingTime = sumOfWaitingTimeCalc(pointer);
   while(pointer != NULL)
   {
@@ -371,12 +373,13 @@ void calcAndPrintAverageTurnAroundTime(struct process* pointer)
   }
   sumOfTurnAroundTime = sumOfWaitingTime + sumOfBurstTime;
   avgTurnAroundTime = (sumOfTurnAroundTime/count);
-  printf("Average Turn Around Time\t:\t%d\n",avgTurnAroundTime);
+  printf("Average Turn Around Time\t:\t%f\n",avgTurnAroundTime);
 }
 
 void calcAndPrintAverageWaitingTime(struct process* pointer)
 {
-  int sumOfWaitingTime = 0 , avgWaitingTime = 0, count = 0;
+  float sumOfWaitingTime = 0.0, avgWaitingTime = 0.0;
+  int count = 0;
   sumOfWaitingTime = sumOfWaitingTimeCalc(pointer);
   while(pointer != NULL)
   {
@@ -384,7 +387,7 @@ void calcAndPrintAverageWaitingTime(struct process* pointer)
     pointer = pointer->nextProcess;
   }
   avgWaitingTime = (sumOfWaitingTime/count);
-  printf("Average Waiting Time\t:\t%d\n",avgWaitingTime);
+  printf("Average Waiting Time\t\t:\t%f\n",avgWaitingTime);
 }
 
 void fcfs_non_premptive()
