@@ -299,7 +299,7 @@ struct process* makeListSort(int value)
       lessFound = 0;
       while(movePointer != NULL)
       {
-        if(lessValue >= movePointer->integerData[value])
+        if(lessValue > movePointer->integerData[value])
         {
           lessValue = movePointer->integerData[value];
           lessValueProcessID = movePointer->integerData[0];
@@ -308,8 +308,8 @@ struct process* makeListSort(int value)
         movePointer = movePointer->nextProcess;
       }
       // printf("lessValue:%d\nlessValueProcessID:%d\n",lessValue,lessValueProcessID);
-      if(lessFound == 1)
-      {
+      // if(lessFound == 1)
+      // {
         if(pointer != NULL)
         {
           savePointer = pointer;
@@ -331,7 +331,7 @@ struct process* makeListSort(int value)
           lessValueProcessID = copyStartPointer->integerData[0];
         }
         // listAllProcesses(copyStartPointer);
-      }
+      // }
     } while(copyStartPointer != NULL);
     // printf("works here\n");
     pointer->nextProcess = NULL;
