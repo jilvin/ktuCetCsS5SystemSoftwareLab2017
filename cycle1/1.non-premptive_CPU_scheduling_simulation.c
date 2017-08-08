@@ -360,14 +360,14 @@ float sumOfWaitingTimeCalc(struct process* pointer)
   return sumOfWaitingTime;
 }
 
-void calcAndPrintAverageTurnAroundTime(struct process* pointer)
+void calcAndPrintAverageTurnAroundTime(struct process* pointer, int count)
 {
   float sumOfWaitingTime=0.0, sumOfTurnAroundTime = 0.0, sumOfBurstTime = 0.0, avgTurnAroundTime = 0.0;
-  int count = 0;
+  // int count = 0;
   sumOfWaitingTime = sumOfWaitingTimeCalc(pointer);
   while(pointer != NULL)
   {
-    count++;
+    // count++;
     sumOfBurstTime = sumOfBurstTime + pointer->integerData[2];
     pointer = pointer->nextProcess;
   }
@@ -376,18 +376,30 @@ void calcAndPrintAverageTurnAroundTime(struct process* pointer)
   printf("Average Turn Around Time\t:\t%f\n",avgTurnAroundTime);
 }
 
-void calcAndPrintAverageWaitingTime(struct process* pointer)
+void calcAndPrintAverageWaitingTime(struct process* pointer, int count)
 {
   float sumOfWaitingTime = 0.0, avgWaitingTime = 0.0;
-  int count = 0;
+  // int count = 0;
   sumOfWaitingTime = sumOfWaitingTimeCalc(pointer);
+  // while(pointer != NULL)
+  // {
+    // count++;
+    // pointer = pointer->nextProcess;
+  // }
+  avgWaitingTime = (sumOfWaitingTime/count);
+  printf("Average Waiting Time\t\t:\t%f\n",avgWaitingTime);
+}
+
+int countProcesses(struct process* startPointer)
+{
+  int count=0;
+  struct process* pointer = startPointer;
   while(pointer != NULL)
   {
     count++;
-    pointer = pointer->nextProcess;
+    pointer=pointer->nextProcess;
   }
-  avgWaitingTime = (sumOfWaitingTime/count);
-  printf("Average Waiting Time\t\t:\t%f\n",avgWaitingTime);
+  return count;
 }
 
 void fcfs_non_premptive()
@@ -395,6 +407,7 @@ void fcfs_non_premptive()
   clearScreen();
   // First Come First Serve - Non Premptive
   struct process* pointer = NULL;
+  int count = countProcesses(startPointer);
   if(startPointer != NULL)
   {
     // 1 - jobEntryTime
@@ -402,8 +415,8 @@ void fcfs_non_premptive()
     if(pointer != NULL)
     {
       listAllProcesses(pointer);
-      calcAndPrintAverageTurnAroundTime(pointer);
-      calcAndPrintAverageWaitingTime(pointer);
+      calcAndPrintAverageTurnAroundTime(pointer, count);
+      calcAndPrintAverageWaitingTime(pointer, count);
       printf("\n");
     }
   }
@@ -418,6 +431,7 @@ void sjf_non_premptive()
   clearScreen();
   // printf("sjf\n");
   struct process* pointer = NULL;
+  int count = countProcesses(startPointer);
   if(startPointer != NULL)
   {
     // 1 - jobEntryTime
@@ -425,8 +439,8 @@ void sjf_non_premptive()
     if(pointer != NULL)
     {
       listAllProcesses(pointer);
-      calcAndPrintAverageTurnAroundTime(pointer);
-      calcAndPrintAverageWaitingTime(pointer);
+      calcAndPrintAverageTurnAroundTime(pointer, count);
+      calcAndPrintAverageWaitingTime(pointer, count);
       printf("\n");
     }
   }
@@ -436,20 +450,110 @@ void sjf_non_premptive()
   }
 }
 
+struct process* makeTimeSlicedList(struct process* pointer, int timeSlice)
+{
+  if(pointer != NULL)
+  {
+    struct process* copyStartPointer = malloc(sizeof(struct process));
+    struct process* movePointer = NULL;
+    copyStartPointer = copyList(copyStartPointer, pointer, 1);
+    pointer = NULL;
+    struct process* returnStartPointer = NULL;
+    struct process* savePointer = NULL;
+    while(copyStartPointer != NULL)
+    {
+      // listAllProcesses(copyStartPointer);
+      movePointer = copyStartPointer;
+      while(movePointer != NULL)
+      {
+        if(movePointer->integerData[2]>timeSlice)
+        {
+          // printf("%d\n", movePointer->integerData[2]);
+          movePointer->integerData[2] = (movePointer->integerData[2] - timeSlice);
+          // printf("%d\n", movePointer->integerData[2]);
+          if(pointer != NULL)
+          {
+            savePointer = pointer;
+          }
+          pointer = malloc(sizeof(struct process));
+          if(savePointer != NULL) // && savePointer != copyStartPointer)
+          {
+            savePointer->nextProcess = pointer;
+          }
+          if(returnStartPointer == NULL)
+          {
+            returnStartPointer = pointer;
+          }
+          copyProcessStructure(pointer, movePointer);
+          pointer->integerData[2] = timeSlice;
+          // printf("works here");
+        }
+        else
+        {
+          if(pointer != NULL)
+          {
+            savePointer = pointer;
+          }
+          pointer = malloc(sizeof(struct process));
+          if(savePointer != NULL) // && savePointer != copyStartPointer)
+          {
+            savePointer->nextProcess = pointer;
+          }
+          if(returnStartPointer == NULL)
+          {
+            returnStartPointer = pointer;
+          }
+          // printf("%d\n", movePointer->integerData[0]);
+          copyProcessStructure(pointer, movePointer);
+          copyStartPointer = deleteProcess(movePointer->integerData[0], copyStartPointer);
+          // listAllProcesses(copyStartPointer);
+          // printf("Deleted %d\n", movePointer->integerData[0]);
+        }
+        movePointer = movePointer->nextProcess;
+      }
+    }
+    return returnStartPointer;
+  }
+}
+
+struct process* joinPossibleProcesses(struct process* originalList)
+{
+  struct process* pointer = originalList;
+  while(pointer != NULL)
+  {
+    if(pointer->nextProcess != NULL)
+    {
+      if(pointer->integerData[0] == pointer->nextProcess->integerData[0])
+      {
+        pointer->nextProcess->integerData[2] = pointer->integerData[2] + pointer->nextProcess->integerData[2];
+        originalList = deleteProcess(pointer->nextProcess->integerData[0], originalList);
+      }
+    }
+    pointer=pointer->nextProcess;
+  }
+  return originalList;
+}
+
 void round_robin_non_premptive()
 {
   clearScreen();
   // printf("round robin\n");
+  int timeSlice;
   struct process* pointer = NULL;
   if(startPointer != NULL)
   {
+    int count = countProcesses(startPointer);
     // 1 - jobEntryTime
+    printf("Input time slice\n");
+    scanf("%d",&timeSlice);
     pointer = makeListSort(1);
     if(pointer != NULL)
     {
+      pointer = makeTimeSlicedList(pointer, timeSlice);
+      pointer = joinPossibleProcesses(pointer);
       listAllProcesses(pointer);
-      calcAndPrintAverageTurnAroundTime(pointer);
-      calcAndPrintAverageWaitingTime(pointer);
+      calcAndPrintAverageTurnAroundTime(pointer, count);
+      calcAndPrintAverageWaitingTime(pointer, count);
       printf("\n");
     }
   }
@@ -466,13 +570,14 @@ void priority_non_premptive()
   struct process* pointer = NULL;
   if(startPointer != NULL)
   {
+    int count = countProcesses(startPointer);
     // 1 - jobEntryTime
     pointer = makeListSort(3);
     if(pointer != NULL)
     {
       listAllProcesses(pointer);
-      calcAndPrintAverageTurnAroundTime(pointer);
-      calcAndPrintAverageWaitingTime(pointer);
+      calcAndPrintAverageTurnAroundTime(pointer, count);
+      calcAndPrintAverageWaitingTime(pointer, count);
       printf("\n");
     }
   }
