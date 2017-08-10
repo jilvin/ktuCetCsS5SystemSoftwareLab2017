@@ -32,7 +32,7 @@ void listProcess(struct process* pointer)
 
 void listAllProcesses(struct process* recievedStartPointer)
 {
-  // clearScreen();
+  clearScreen();
   struct process* pointer = recievedStartPointer;
   if(pointer!=NULL)
   {
@@ -310,27 +310,27 @@ struct process* makeListSort(int value)
       // printf("lessValue:%d\nlessValueProcessID:%d\n",lessValue,lessValueProcessID);
       // if(lessFound == 1)
       // {
-        if(pointer != NULL)
-        {
-          savePointer = pointer;
-        }
-        pointer = malloc(sizeof(struct process));
-        if(savePointer != NULL) // && savePointer != copyStartPointer)
-        {
-          savePointer->nextProcess = pointer;
-        }
-        if(returnStartPointer == NULL)
-        {
-          returnStartPointer = pointer;
-        }
-        copyProcessStructureUsingProcessID(pointer, lessValueProcessID);
-        copyStartPointer = deleteProcess(lessValueProcessID, copyStartPointer);
-        if(copyStartPointer != NULL)
-        {
-          lessValue = copyStartPointer->integerData[value];
-          lessValueProcessID = copyStartPointer->integerData[0];
-        }
-        // listAllProcesses(copyStartPointer);
+      if(pointer != NULL)
+      {
+        savePointer = pointer;
+      }
+      pointer = malloc(sizeof(struct process));
+      if(savePointer != NULL) // && savePointer != copyStartPointer)
+      {
+        savePointer->nextProcess = pointer;
+      }
+      if(returnStartPointer == NULL)
+      {
+        returnStartPointer = pointer;
+      }
+      copyProcessStructureUsingProcessID(pointer, lessValueProcessID);
+      copyStartPointer = deleteProcess(lessValueProcessID, copyStartPointer);
+      if(copyStartPointer != NULL)
+      {
+        lessValue = copyStartPointer->integerData[value];
+        lessValueProcessID = copyStartPointer->integerData[0];
+      }
+      // listAllProcesses(copyStartPointer);
       // }
     } while(copyStartPointer != NULL);
     // printf("works here\n");
@@ -383,8 +383,8 @@ void calcAndPrintAverageWaitingTime(struct process* pointer, int count)
   sumOfWaitingTime = sumOfWaitingTimeCalc(pointer);
   // while(pointer != NULL)
   // {
-    // count++;
-    // pointer = pointer->nextProcess;
+  // count++;
+  // pointer = pointer->nextProcess;
   // }
   avgWaitingTime = (sumOfWaitingTime/count);
   printf("Average Waiting Time\t\t:\t%f\n",avgWaitingTime);
@@ -452,6 +452,7 @@ void sjf_non_premptive()
 
 struct process* makeTimeSlicedList(struct process* pointer, int timeSlice)
 {
+  int mode;
   if(pointer != NULL)
   {
     struct process* copyStartPointer = malloc(sizeof(struct process));
@@ -460,14 +461,16 @@ struct process* makeTimeSlicedList(struct process* pointer, int timeSlice)
     pointer = NULL;
     struct process* returnStartPointer = NULL;
     struct process* savePointer = NULL;
+    struct process* nextPointer = NULL;
+    // listAllProcesses(copyStartPointer);
     while(copyStartPointer != NULL)
     {
-      // listAllProcesses(copyStartPointer);
       movePointer = copyStartPointer;
       while(movePointer != NULL)
       {
         if(movePointer->integerData[2]>timeSlice)
         {
+          mode = 1;
           // printf("%d\n", movePointer->integerData[2]);
           movePointer->integerData[2] = (movePointer->integerData[2] - timeSlice);
           // printf("%d\n", movePointer->integerData[2]);
@@ -485,11 +488,13 @@ struct process* makeTimeSlicedList(struct process* pointer, int timeSlice)
             returnStartPointer = pointer;
           }
           copyProcessStructure(pointer, movePointer);
+          pointer->nextProcess = NULL;
           pointer->integerData[2] = timeSlice;
           // printf("works here");
         }
         else
         {
+          mode = 2;
           if(pointer != NULL)
           {
             savePointer = pointer;
@@ -505,11 +510,39 @@ struct process* makeTimeSlicedList(struct process* pointer, int timeSlice)
           }
           // printf("%d\n", movePointer->integerData[0]);
           copyProcessStructure(pointer, movePointer);
-          copyStartPointer = deleteProcess(movePointer->integerData[0], copyStartPointer);
-          // listAllProcesses(copyStartPointer);
+          pointer->nextProcess = NULL;
+          nextPointer = movePointer->nextProcess;
           // printf("Deleted %d\n", movePointer->integerData[0]);
+          copyStartPointer = deleteProcess(movePointer->integerData[0], copyStartPointer);
+          // listAllProcesses(returnStartPointer);
         }
-        movePointer = movePointer->nextProcess;
+        if(mode == 1)
+        {
+          // printf("got in 1\n");
+          if(movePointer->nextProcess != NULL)
+          {
+            if(pointer->integerData[0] == movePointer->nextProcess->integerData[0] && copyStartPointer != movePointer)
+            {
+              // printf("got in in 1\n");
+              movePointer = movePointer->nextProcess;
+            }
+          }
+          movePointer = movePointer->nextProcess;
+        }
+        else if(mode == 2)
+        {
+          // printf("got in 2\n");
+          if(nextPointer != NULL)
+          {
+            if(pointer->integerData[0] == nextPointer->integerData[0] && copyStartPointer != movePointer)
+            {
+              // printf("got in in 2\n");
+              nextPointer = nextPointer->nextProcess;
+            }
+          }
+          // printf("got in 2\n");
+          movePointer = nextPointer;
+        }
       }
     }
     return returnStartPointer;
