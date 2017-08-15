@@ -37,7 +37,39 @@ int ceiling(float x)
 
 void newFolder(struct directory* ourDirectory)
 {
-
+  struct directory* endPointer = ourDirectory->startDirectory;
+  struct directory* secondLastPointer = NULL;
+  if(ourDirectory != NULL)
+  {
+    clearScreen();
+    while(endPointer != NULL)
+    {
+      if(endPointer != NULL)
+      {
+        secondLastPointer = endPointer;
+      }
+      endPointer = endPointer->nextDirectory;
+    }
+    endPointer = malloc(sizeof(struct file));
+    printf("Enter folder name:\n");
+    scanf("%s",&(endPointer->directoryName[0]));
+    endPointer->nextDirectory = NULL;
+    if(secondLastPointer != NULL)
+    {
+      secondLastPointer->nextDirectory = endPointer;
+    }
+    else
+    {
+      ourDirectory->startDirectory = endPointer;
+    }
+    clearScreen();
+    printf("Folder added successfully.\n\n");
+  }
+  else
+  {
+    clearScreen();
+    printf("Error: Unable to allocate required structure.\n");
+  }
 }
 
 void newFile(struct directory* ourDirectory)
