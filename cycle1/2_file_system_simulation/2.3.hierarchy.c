@@ -17,7 +17,11 @@ struct directory
   struct directory* nextDirectory;
   struct file* startFile;
   struct directory* startDirectory;
+  struct directory* parentDirectory;
 };
+
+struct directory* currentDirectory;
+// char* currentPath;
 
 void clearScreen()
 {
@@ -53,14 +57,18 @@ void newFolder(struct directory* ourDirectory)
     endPointer = malloc(sizeof(struct file));
     printf("Enter directory name:\n");
     scanf("%s",&(endPointer->directoryName[0]));
+    endPointer->startFile = NULL;
     endPointer->nextDirectory = NULL;
+    endPointer->startDirectory = NULL;
     if(secondLastPointer != NULL)
     {
       secondLastPointer->nextDirectory = endPointer;
+      endPointer->parentDirectory = secondLastPointer;
     }
     else
     {
       ourDirectory->startDirectory = endPointer;
+      endPointer->parentDirectory = ourDirectory;
     }
     clearScreen();
     printf("Directory added successfully.\n\n");
@@ -389,6 +397,109 @@ void deleteFile(struct directory* ourDirectory)
   }
 }
 
+void changeDirectory(struct directory* ourDirectory)
+{
+  clearScreen();
+  int tCount, num, i, j, intLen, choice, flagChanged = 0;
+  if(ourDirectory != NULL)
+  {
+    if(ourDirectory->startDirectory != NULL || ourDirectory->parentDirectory != NULL)
+    {
+      struct directory* movePointer = ourDirectory->startDirectory;
+      printf("List of directories:\n\n");
+      if(ourDirectory -> parentDirectory != NULL)
+      {
+        tCount = (6-ceiling(((float) strlen("1"))/8.0));
+        printf("0");
+        for(int i=0; i<tCount; i++)
+        {
+          printf("\t");
+        }
+        tCount = (7-ceiling(((float) strlen(".."))/8.0));
+        printf("..");
+        for(int i=0; i<tCount; i++)
+        {
+          printf("\t");
+        }
+        printf("d\n");
+      }
+      num = 1;
+      while(movePointer != NULL)
+      {
+        intLen = 0;
+        j = num;
+        while(j % 10 != 0)
+        {
+          intLen++;
+          j = j/10;
+        }
+        tCount = (6-ceiling((intLen/8.0)));
+        printf("%d",num);
+        num++;
+        for(int i=0; i<tCount; i++)
+        {
+          printf("\t");
+        }
+        tCount = (7-ceiling(((float) strlen(movePointer->directoryName))/8.0));
+        printf("%s",movePointer->directoryName);
+        for(int i=0; i<tCount; i++)
+        {
+          printf("\t");
+        }
+        printf("d\n");
+        movePointer = movePointer->nextDirectory;
+      }
+      printf("\n");
+      printf("Choose your desired directory:\n");
+      scanf("%d", &choice);
+      if(choice>-1 && choice<num)
+      {
+        clearScreen();
+        if(choice == 0 && ourDirectory->parentDirectory!=NULL)
+        {
+          currentDirectory = ourDirectory->parentDirectory;
+        }
+        else
+        {
+          j = 1;
+          movePointer = ourDirectory->startDirectory;
+          while(movePointer != NULL && flagChanged == 0)
+          {
+            if(choice == j)
+            {
+              currentDirectory = movePointer;
+              flagChanged = 1;
+            }
+            j++;
+          }
+          if(flagChanged == 1)
+          {
+            printf("Directory successfully changed.\n\n");
+          }
+          else
+          {
+            printf("Error: Unexpected error occurred.\n\n");
+          }
+        }
+      }
+      else
+      {
+        clearScreen();
+        printf("Invalid Choice!\n");
+      }
+    }
+    else
+    {
+      printf("No directories found in directory %s.\n",ourDirectory->directoryName);
+    }
+  }
+  else
+  {
+    clearScreen();
+    printf("Error: Unable to allocate required structure.\n");
+  }
+}
+
 int main()
 {
   clearScreen();
@@ -398,46 +509,56 @@ int main()
   root->nextDirectory=NULL;
   root->startFile = NULL;
   root->startDirectory = NULL;
-  if(root != NULL)
+  root->parentDirectory = NULL;
+  currentDirectory = root;
+  // strcpy(currentPath,"/");
+  if(currentDirectory != NULL)
   {
     do
     {
-      char* path;
       int returnListFoldersStatus, returnListFilesStatus;
-      strcpy(path,"/");
-      printf("Current path:\n%s\n\n1)\tNew Folder\n2)\tNew File\n3)\tList\n4)\tSearch Folder\n5)\tSearch File\n6)\tDelete Folder\n7)\tDelete File\n8)\tExit\n\nPlease enter your choice:\n",path);
+      if(currentDirectory->parentDirectory != NULL)
+      {
+        printf("Parent directory:\n%s\n\n1)\tNew Folder\n2)\tNew File\n3)\tList\n4)\tSearch Folder\n5)\tSearch File\n6)\tDelete Folder\n7)\tDelete File\n8)\tChange directory\n9)\tExit\n\nPlease enter your choice:\n",currentDirectory->parentDirectory->directoryName);
+      }
+      else
+      {
+        printf("You are at the root directory.\n\n1)\tNew Folder\n2)\tNew File\n3)\tList\n4)\tSearch Folder\n5)\tSearch File\n6)\tDelete Folder\n7)\tDelete File\n8)\tChange directory\n9)\tExit\n\nPlease enter your choice:\n");
+      }
       scanf("%d",&choice);
       switch(choice)
       {
-        case 1: newFolder(root);
+        case 1: newFolder(currentDirectory);
         break;
-        case 2: newFile(root);
+        case 2: newFile(currentDirectory);
         break;
         case 3: clearScreen();
         printf("Name\t\t\t\t\t\tType\n\n");
-        returnListFoldersStatus = listFolders(root);
-        returnListFilesStatus = listFiles(root);
+        returnListFoldersStatus = listFolders(currentDirectory);
+        returnListFilesStatus = listFiles(currentDirectory);
         if(returnListFoldersStatus == 0 && returnListFilesStatus == 0)
         {
           clearScreen();
-          printf("Nothing found in directory %s.\n\n",root->directoryName);
+          printf("Nothing found in directory %s.\n\n",currentDirectory->directoryName);
         }
         else
         {
           printf("\n");
         }
         break;
-        case 4: searchDirectory(root);
+        case 4: searchDirectory(currentDirectory);
         break;
-        case 5: searchFile(root);
+        case 5: searchFile(currentDirectory);
         break;
-        case 6: deleteDirectory(root);
+        case 6: deleteDirectory(currentDirectory);
         break;
-        case 7: deleteFile(root);
+        case 7: deleteFile(currentDirectory);
         break;
-        default: choice = 8;
+        case 8: changeDirectory(currentDirectory);
+        break;
+        default: choice = 9;
       }
-    }while( (choice>0) && (choice<8));
+    }while( (choice>0) && (choice<9));
     clearScreen();
     printf("Thanks for using Non-preemptive CPU Scheduling Simulation. Take care. Bye.\n");
     return 1;
