@@ -28,10 +28,11 @@ void clearScreen()
   printf("\033[H\033[J");
 }
 
-int ceiling(float x)
+int customCeiling(float x)
 {
+  // printf("%f\n", x);
   int y = (int) x;
-  if(x>y)
+  if(x>y || x==y)
   {
     y++;
   }
@@ -54,7 +55,7 @@ void newFolder(struct directory* ourDirectory)
       }
       endPointer = endPointer->nextDirectory;
     }
-    endPointer = malloc(sizeof(struct file));
+    endPointer = malloc(sizeof(struct directory));
     printf("Enter directory name:\n");
     scanf("%s",&(endPointer->directoryName[0]));
     endPointer->startFile = NULL;
@@ -128,7 +129,7 @@ int listFolders(struct directory* ourDirectory)
       // printf("List of files:\n\n");
       while(movePointer != NULL)
       {
-        int tCount = (7-ceiling(((float) strlen(movePointer->directoryName))/8.0));
+        int tCount = (7-customCeiling((((float) strlen(movePointer->directoryName))/8.0)));
         printf("%s",movePointer->directoryName);
         for(int i=0; i<tCount; i++)
         {
@@ -164,7 +165,7 @@ int listFiles(struct directory* ourDirectory)
       // printf("List of files:\n\n");
       while(movePointer != NULL)
       {
-        int tCount = (7-ceiling(((float) strlen(movePointer->fileName))/8.0));
+        int tCount = (7-customCeiling(((float) strlen(movePointer->fileName))/8.0));
         printf("%s",movePointer->fileName);
         for(int i=0; i<tCount; i++)
         {
@@ -277,6 +278,7 @@ void searchFile(struct directory* ourDirectory)
 
 void deleteDirectory(struct directory* ourDirectory)
 {
+  // Urgent: Rewrite for recursive freeing of memory resources.
   clearScreen();
   char searchString[40];
   int flag = 0;
@@ -409,13 +411,13 @@ void changeDirectory(struct directory* ourDirectory)
       printf("List of directories:\n\n");
       if(ourDirectory -> parentDirectory != NULL)
       {
-        tCount = (6-ceiling(((float) strlen("1"))/8.0));
+        tCount = (6-customCeiling(((float) strlen("1"))/8.0));
         printf("0");
         for(int i=0; i<tCount; i++)
         {
           printf("\t");
         }
-        tCount = (7-ceiling(((float) strlen(".."))/8.0));
+        tCount = (7-customCeiling(((float) strlen(".."))/8.0));
         printf("..");
         for(int i=0; i<tCount; i++)
         {
@@ -433,14 +435,14 @@ void changeDirectory(struct directory* ourDirectory)
           intLen++;
           j = j/10;
         }
-        tCount = (6-ceiling((intLen/8.0)));
+        tCount = (6-customCeiling((intLen/8.0)));
         printf("%d",num);
         num++;
         for(int i=0; i<tCount; i++)
         {
           printf("\t");
         }
-        tCount = (7-ceiling(((float) strlen(movePointer->directoryName))/8.0));
+        tCount = (7-customCeiling(((float) strlen(movePointer->directoryName))/8.0));
         printf("%s",movePointer->directoryName);
         for(int i=0; i<tCount; i++)
         {
