@@ -3,13 +3,18 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <string.h>
+#include <stdlib.h>
 
 int assemblerProgram = 0;
+int startAddress = 0;
+int locCtr;
 
 // function to operate on the line read from first_pass()
 void first_pass_process_line(char* line)
 {
-  int len;
+  int len, tokenNo=1;
+  const char s[3] = "  ";
+  char *token;
 
   // obtain length of line
   len = strlen(line);
@@ -17,23 +22,74 @@ void first_pass_process_line(char* line)
   // check for empty line
   if(len == 1 && line[0] == '\n')
   {
-    printf("Empty line.\n");
+    // printf("Empty line.\n");
   }
   else
   {
     if(assemblerProgram == 0)
     {
-      // Check to find START first. If finding some other non-recognizable words first, terminate.
-
       // check if comment
       if(line[0] == '.')
       {
-        printf("Comment line.\n");
+        // printf("Comment line.\n");
+      }
+      else
+      {
+        // Check to find START first. If finding some other non-recognizable words first, terminate.
+
+        if(assemblerProgram == 0)
+        {
+          /* get the first token */
+          token = strtok(line, s);
+
+          /* walk through other tokens */
+          while( token != NULL )
+          {
+            if(tokenNo == 2)
+            {
+              // printf("%s\n", token);
+              if(!strcmp(token, "START"))
+              {
+                // printf("gets here\n");
+                assemblerProgram = 1;
+              }
+              else
+              {
+                assemblerProgram = -1;
+              }
+            }
+            else if(tokenNo == 3 && assemblerProgram == 1)
+            {
+              // printf("%s\n", token);
+
+              // get startAddress
+              startAddress = atoi(token);
+
+              // printf("START found\n");
+
+              // Print startAddress
+              // printf("%d\n", startAddress);
+
+              // inititalizing locCtr
+              locCtr = startAddress;
+            }
+            token = strtok(NULL, s);
+            tokenNo++;
+          }
+        }
       }
     }
-    else
+    else if(assemblerProgram == 1)
     {
-      // START found
+      // check if comment
+      if(line[0] == '.')
+      {
+        // printf("Comment line.\n");
+      }
+      else
+      {
+        printf("%s\n", line);
+      }
     }
   }
 }
@@ -47,18 +103,25 @@ void first_pass(FILE *fp, char* fileName)
   if((read = getline(&line, &len, fp)) != -1)
   {
     // printf("Retrieved line of length %zu :\n", read);
-    printf("%s", line);
+    // printf("%s", line);
 
     // process the read line
     first_pass_process_line(line);
 
-    while ((read = getline(&line, &len, fp)) != -1)
+    while ((read = getline(&line, &len, fp)) != -1 && assemblerProgram != -1)
     {
       // printf("Retrieved line of length %zu :\n", read);
-      printf("%s", line);
+      // printf("%s", line);
 
       // process the read line
       first_pass_process_line(line);
+    }
+    if(assemblerProgram == -1)
+    {
+      printf("Error: Not an assembly file for SIC.\n");
+
+      // terminating assembly.
+      printf("Assembling terminated.\n");
     }
   }
   else
