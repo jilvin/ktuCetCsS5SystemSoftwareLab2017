@@ -8,13 +8,56 @@
 int assemblerProgram = 0;
 int startAddress = 0;
 int locCtr;
+char opCode[3];
+
+// function to return machine code when passed a valid mnemonic. if mnemonic is invalid GG
+char* returnMachineCodeForMnemonic(char* mnemonic)
+{
+  FILE *opfp;
+
+  opfp = fopen("OPTAB", "r");
+
+  if(!opfp)
+  {
+    // OPTAB not found or is not accessible
+    printf("Error: OPTAB not found or is inaccessible.\n");
+
+    // assembly terminated
+    assemblerProgram = -1;
+
+    // return error occurred state to first_pass_process_line()
+    strcpy(opCode, "HH");
+    return opCode;
+  }
+  else
+  {
+    // OPTAB is accessible
+    printf("OPTAB is accessible.\n");
+
+    // check if a valid mnemonic
+    if(1 != 1)
+    {
+
+    }
+    else
+    {
+      strcpy(opCode, "GG");
+      return opCode;
+    }
+  }
+
+  // close connection to opfp
+  fclose(opfp);
+}
 
 // function to operate on the line read from first_pass()
 void first_pass_process_line(char* line)
 {
   int len, tokenNo=1;
-  const char s[3] = "  ";
+  const char s[2] = " ";
   char *token;
+  char tempLabel[20];
+  char* tempOpCode = NULL;
 
   // obtain length of line
   len = strlen(line);
@@ -88,7 +131,36 @@ void first_pass_process_line(char* line)
       }
       else
       {
-        printf("%s\n", line);
+        // print read line
+        // printf("%s\n", line);
+
+        /* get the first token */
+        token = strtok(line, s);
+
+        /* walk through other tokens */
+        while( token != NULL )
+        {
+          if(tokenNo == 1)
+          {
+            strcpy(tempLabel, token);
+          }
+          else if(tokenNo == 2)
+          {
+            tempOpCode = returnMachineCodeForMnemonic(token);
+            if(strcmp(tempOpCode, "GG") == 0)
+            {
+              // Invalid mnemonic found
+              printf("Error: Invalid mnemonic found.\n");
+              assemblerProgram = -1;
+            }
+          }
+
+          // obtain next token from the read line
+          token = strtok(NULL, s);
+
+          // increment token number
+          tokenNo++;
+        }
       }
     }
   }
@@ -100,6 +172,7 @@ void first_pass(FILE *fp, char* fileName)
   char *line = NULL;
   size_t len = 0;
   ssize_t read;
+
   if((read = getline(&line, &len, fp)) != -1)
   {
     // printf("Retrieved line of length %zu :\n", read);
@@ -116,10 +189,9 @@ void first_pass(FILE *fp, char* fileName)
       // process the read line
       first_pass_process_line(line);
     }
+
     if(assemblerProgram == -1)
     {
-      printf("Error: Not an assembly file for SIC.\n");
-
       // terminating assembly.
       printf("Assembling terminated.\n");
     }
