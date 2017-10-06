@@ -6,7 +6,10 @@
 #include <stdlib.h>
 
 // Header for management of OPTAB
-#include "optab.h"
+#include "required/optab/optab.h"
+
+// Header for management of SYSTAB
+#include "required/systab/systab.h"
 
 int assemblerProgram = 0;
 int startAddress = 0;

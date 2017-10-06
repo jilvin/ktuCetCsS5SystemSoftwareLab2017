@@ -54,7 +54,7 @@ char* checkIfValidMnemonic(char* mnemonic, FILE* fp)
       char *newline = strchr( line, '\n' );
       if ( newline )
       *newline = 0;
-      
+
       // get first token
       token = strtok(line, s);
       if(strcmp(token, mnemonic) == 0)
@@ -101,7 +101,7 @@ char* returnMachineCodeForMnemonic(char* mnemonic)
 {
   FILE *opfp;
 
-  opfp = fopen("OPTAB", "r");
+  opfp = fopen("files/OPTAB", "r");
 
   // printf("%s\n", mnemonic);
 
