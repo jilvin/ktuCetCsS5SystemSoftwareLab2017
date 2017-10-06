@@ -122,6 +122,10 @@ void first_pass_process_line(char* line)
               // request to terminate assembly
               assemblerProgram = -1;
             }
+            else
+            {
+              printf("Recieved opCode from returnMachineCodeForMnemonic() for %s is %s\n", token, tempOpCode);
+            }
           }
 
           // obtain next token from the read line

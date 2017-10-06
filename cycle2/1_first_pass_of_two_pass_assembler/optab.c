@@ -24,8 +24,14 @@ char* checkIfValidMnemonic(char* mnemonic, FILE* fp)
     // printf("Retrieved line of length %zu :\n", read);
     // printf("%s", line);
 
+    // deletion of \n at the end of line
+    char *newline = strchr( line, '\n' );
+    if ( newline )
+    *newline = 0;
+
     // get first token
     token = strtok(line, s);
+
     // printf("%s %s\n", token, mnemonic);
     if(strcmp(token, mnemonic) == 0)
     {
@@ -44,6 +50,11 @@ char* checkIfValidMnemonic(char* mnemonic, FILE* fp)
       // printf("Retrieved line of length %zu :\n", read);
       // printf("%s", line);
 
+      // deletion of \n at the end of line
+      char *newline = strchr( line, '\n' );
+      if ( newline )
+      *newline = 0;
+      
       // get first token
       token = strtok(line, s);
       if(strcmp(token, mnemonic) == 0)
@@ -65,6 +76,13 @@ char* checkIfValidMnemonic(char* mnemonic, FILE* fp)
       strcpy(opCode, "GG");
       return opCode;
     }
+
+    // Unexpected error
+    printf("Error: Unexpected error occurred in optab.c\n");
+
+    // Return error state
+    strcpy(opCode, "HH");
+    return opCode;
   }
   else
   {
@@ -76,7 +94,9 @@ char* checkIfValidMnemonic(char* mnemonic, FILE* fp)
   }
 }
 
-// function to return machine code when passed a valid mnemonic. if mnemonic is invalid GG
+// function to return machine code when passed a valid mnemonic.
+// if mnemonic is invalid returns GG
+// if error occurs returns HH
 char* returnMachineCodeForMnemonic(char* mnemonic)
 {
   FILE *opfp;
