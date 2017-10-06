@@ -18,7 +18,7 @@ int locCtr;
 // function to operate on the line read from first_pass()
 void first_pass_process_line(char* line)
 {
-  int len, tokenNo=1;
+  int len, tokenNo=1, checkAndSaveInSYSTAB_Flag;
   const char s[2] = " ";
   char *token;
   char tempLabel[20];
@@ -122,12 +122,32 @@ void first_pass_process_line(char* line)
             else if(strcmp(tempOpCode, "HH") == 0)
             {
               // Error encountered in returnMachineCodeForMnemonic()
+
               // request to terminate assembly
               assemblerProgram = -1;
             }
             else
             {
-              printf("Recieved opCode from returnMachineCodeForMnemonic() for %s is %s\n", token, tempOpCode);
+              // printf("Recieved opCode from returnMachineCodeForMnemonic() for %s is %s.\n", token, tempOpCode);
+              checkAndSaveInSYSTAB_Flag = checkAndSaveInSYSTAB(tempLabel, locCtr);
+              // printf("%d\n", checkAndSaveInSYSTAB_Flag);
+              
+              if(checkAndSaveInSYSTAB_Flag == 1)
+              {
+                // label inserted successfully
+              }
+              else if(checkAndSaveInSYSTAB_Flag == 0)
+              {
+                // label already exists
+              }
+              else if(checkAndSaveInSYSTAB_Flag == -1)
+              {
+                // error occurred in checkAndSaveInSYSTAB()
+
+                // request to terminate assembly
+                assemblerProgram = -1;
+              }
+              locCtr++;
             }
           }
 
@@ -165,6 +185,9 @@ void first_pass(FILE *fp, char* fileName)
       // process the read line
       first_pass_process_line(line);
     }
+
+    // delete temporary files if present
+    deleteSYSTAB();
 
     if(assemblerProgram == -1)
     {

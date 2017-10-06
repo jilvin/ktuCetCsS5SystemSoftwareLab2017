@@ -6,6 +6,7 @@
 #define __SYSTAB_H__
 
 extern int checkAndSaveInSYSTAB(char* label, int locCtr);
+extern void deleteSYSTAB();
 
 #endif
 /*__SYSTAB_H__*/

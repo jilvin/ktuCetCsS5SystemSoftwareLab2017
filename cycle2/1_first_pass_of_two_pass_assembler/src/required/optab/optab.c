@@ -11,7 +11,6 @@ char opCode[3];
 char* checkIfValidMnemonic(char* mnemonic, FILE* fp)
 {
   // Search for the passed mnemonic in OPTAB
-
   int mnemonicFound = 0;
   char *line = NULL;
   size_t len = 0;
@@ -123,15 +122,18 @@ char* returnMachineCodeForMnemonic(char* mnemonic)
     strcpy(opCode, checkIfValidMnemonic(mnemonic, opfp));
     if(strcmp(opCode, "GG") == 0)
     {
+      // close connection to opfp
+      fclose(opfp);
+
       // printf("%s\n", opCode);
       return opCode;
     }
     else
     {
+      // close connection to opfp
+      fclose(opfp);
+
       return opCode;
     }
   }
-
-  // close connection to opfp
-  fclose(opfp);
 }
