@@ -5,50 +5,12 @@
 #include <string.h>
 #include <stdlib.h>
 
+// Header for management of OPTAB
+#include "optab.h"
+
 int assemblerProgram = 0;
 int startAddress = 0;
 int locCtr;
-char opCode[3];
-
-// function to return machine code when passed a valid mnemonic. if mnemonic is invalid GG
-char* returnMachineCodeForMnemonic(char* mnemonic)
-{
-  FILE *opfp;
-
-  opfp = fopen("OPTAB", "r");
-
-  if(!opfp)
-  {
-    // OPTAB not found or is not accessible
-    printf("Error: OPTAB not found or is inaccessible.\n");
-
-    // assembly terminated
-    assemblerProgram = -1;
-
-    // return error occurred state to first_pass_process_line()
-    strcpy(opCode, "HH");
-    return opCode;
-  }
-  else
-  {
-    // OPTAB is accessible
-    printf("OPTAB is accessible.\n");
-
-    // check if a valid mnemonic
-    if(1 != 1)
-    {
-
-    }
-    else
-    {
-      strcpy(opCode, "GG");
-      return opCode;
-    }
-  }
-
-  // close connection to opfp
-  fclose(opfp);
-}
 
 // function to operate on the line read from first_pass()
 void first_pass_process_line(char* line)
@@ -146,11 +108,18 @@ void first_pass_process_line(char* line)
           }
           else if(tokenNo == 2)
           {
+            // printf("%s\n", token);
             tempOpCode = returnMachineCodeForMnemonic(token);
             if(strcmp(tempOpCode, "GG") == 0)
             {
               // Invalid mnemonic found
               printf("Error: Invalid mnemonic found.\n");
+              assemblerProgram = -1;
+            }
+            else if(strcmp(tempOpCode, "HH") == 0)
+            {
+              // Error encountered in returnMachineCodeForMnemonic()
+              // request to terminate assembly
               assemblerProgram = -1;
             }
           }
