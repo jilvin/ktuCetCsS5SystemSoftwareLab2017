@@ -5,7 +5,7 @@
 #ifndef __SYSTAB_H__
 #define __SYSTAB_H__
 
-extern int checkAndSaveInSYSTAB(char* label, int locCtr);
+extern int* checkAndSaveInSYSTAB(char* label, int locCtr, int SYSTAB_Created);
 extern void deleteSYSTAB();
 
 #endif

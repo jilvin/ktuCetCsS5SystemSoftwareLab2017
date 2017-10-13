@@ -13,12 +13,35 @@
 
 int assemblerProgram = 0;
 int startAddress = 0;
+int SYSTAB_Created = 0;
 int locCtr;
+int lineCount=0;
+
+int getTotalNumberOfTokens(char* line, const char s[2])
+{
+  char *token;
+  int tokenNo = 0;
+
+  /* get the first token */
+  token = strtok(line, s);
+
+  /* walk through other tokens */
+  while( token != NULL )
+  {
+    // printf("%s", token);
+    token = strtok(NULL, s);
+    tokenNo++;
+  }
+
+  // printf("%d\n", tokenNo);
+  return tokenNo;
+}
 
 // function to operate on the line read from first_pass()
 void first_pass_process_line(char* line)
 {
-  int len, tokenNo=1, checkAndSaveInSYSTAB_Flag;
+  int len, tokenNo=1, checkAndSaveInSYSTAB_Flag, totalTokenCount;
+  int* checkAndSaveInSYSTAB_Return;
   const char s[2] = " ";
   char *token;
   char tempLabel[20];
@@ -26,6 +49,12 @@ void first_pass_process_line(char* line)
 
   // obtain length of line
   len = strlen(line);
+
+  char secondCopyLine[strlen(line) + 1];
+
+  strcpy(secondCopyLine, line);
+
+  lineCount++;
 
   // check for empty line
   if(len == 1 && line[0] == '\n')
@@ -45,45 +74,42 @@ void first_pass_process_line(char* line)
       {
         // Check to find START first. If finding some other non-recognizable words first, terminate.
 
-        if(assemblerProgram == 0)
+        /* get the first token */
+        token = strtok(line, s);
+
+        /* walk through other tokens */
+        while( token != NULL )
         {
-          /* get the first token */
-          token = strtok(line, s);
-
-          /* walk through other tokens */
-          while( token != NULL )
+          if(tokenNo == 2)
           {
-            if(tokenNo == 2)
+            // printf("%s\n", token);
+            if(!strcmp(token, "START"))
             {
-              // printf("%s\n", token);
-              if(!strcmp(token, "START"))
-              {
-                // printf("gets here\n");
-                assemblerProgram = 1;
-              }
-              else
-              {
-                assemblerProgram = -1;
-              }
+              // printf("gets here\n");
+              assemblerProgram = 1;
             }
-            else if(tokenNo == 3 && assemblerProgram == 1)
+            else
             {
-              // printf("%s\n", token);
-
-              // get startAddress
-              startAddress = atoi(token);
-
-              // printf("START found\n");
-
-              // Print startAddress
-              // printf("%d\n", startAddress);
-
-              // inititalizing locCtr
-              locCtr = startAddress;
+              assemblerProgram = -1;
             }
-            token = strtok(NULL, s);
-            tokenNo++;
           }
+          else if(tokenNo == 3 && assemblerProgram == 1)
+          {
+            // printf("%s\n", token);
+
+            // get startAddress
+            startAddress = atoi(token);
+
+            // printf("START found\n");
+
+            // Print startAddress
+            // printf("%d\n", startAddress);
+
+            // inititalizing locCtr
+            locCtr = startAddress;
+          }
+          token = strtok(NULL, s);
+          tokenNo++;
         }
       }
     }
@@ -99,58 +125,97 @@ void first_pass_process_line(char* line)
         // print read line
         // printf("%s\n", line);
 
+        // get total number of tokens in the line
+        totalTokenCount = getTotalNumberOfTokens(secondCopyLine, s);
+
+        // printf("%d\n", totalTokenCount);
+
         /* get the first token */
         token = strtok(line, s);
 
         /* walk through other tokens */
         while( token != NULL )
         {
-          if(tokenNo == 1)
+          if(totalTokenCount == 3)
           {
-            strcpy(tempLabel, token);
+            // line with label
+            if(tokenNo == 1)
+            {
+              strcpy(tempLabel, token);
+            }
+            else if(tokenNo == 2)
+            {
+              if(strcmp(token, "BYTE") == 0)
+              {
+
+              }
+              else if(strcmp(token, "WORD") == 0)
+              {
+
+              }
+              else if(strcmp(token, "RESW") == 0)
+              {
+
+              }
+              else if(strcmp(token, "RESB") == 0)
+              {
+
+              }
+              else
+              {
+                // printf("%s\n", token);
+                tempOpCode = returnMachineCodeForMnemonic(token);
+
+                if(strcmp(tempOpCode, "GG") == 0)
+                {
+                  // Invalid mnemonic found
+                  printf("Error: Invalid mnemonic found on line %d\n", lineCount);
+                  assemblerProgram = -1;
+                }
+                else if(strcmp(tempOpCode, "HH") == 0)
+                {
+                  // Error encountered in returnMachineCodeForMnemonic()
+
+                  // request to terminate assembly
+                  assemblerProgram = -1;
+                }
+                else
+                {
+                  // printf("Recieved opCode from returnMachineCodeForMnemonic() for %s is %s.\n", token, tempOpCode);
+
+                  checkAndSaveInSYSTAB_Return = checkAndSaveInSYSTAB(tempLabel, locCtr, SYSTAB_Created);
+                  checkAndSaveInSYSTAB_Flag = checkAndSaveInSYSTAB_Return[0];
+                  SYSTAB_Created = checkAndSaveInSYSTAB_Return[1];
+                  // printf("%d\n", checkAndSaveInSYSTAB_Flag);
+
+                  if(checkAndSaveInSYSTAB_Flag == 1)
+                  {
+                    // label inserted successfully
+                    printf("Line %d: Label inserted successfully.\n", lineCount);
+                  }
+                  else if(checkAndSaveInSYSTAB_Flag == 0)
+                  {
+                    // label already exists
+                    printf("Line %d: Label already exists.\n", lineCount);
+                  }
+                  else if(checkAndSaveInSYSTAB_Flag == -1)
+                  {
+                    // error occurred in checkAndSaveInSYSTAB()
+                    printf("Line %d: Error occurred in checkAndSaveInSYSTAB().\n", lineCount);
+
+                    // request to terminate assembly
+                    assemblerProgram = -1;
+                  }
+                  locCtr++;
+                }
+              }
+            }
           }
-          else if(tokenNo == 2)
+          else if(totalTokenCount == 2)
           {
-            // printf("%s\n", token);
-            tempOpCode = returnMachineCodeForMnemonic(token);
-            if(strcmp(tempOpCode, "GG") == 0)
-            {
-              // Invalid mnemonic found
-              printf("Error: Invalid mnemonic found.\n");
-              assemblerProgram = -1;
-            }
-            else if(strcmp(tempOpCode, "HH") == 0)
-            {
-              // Error encountered in returnMachineCodeForMnemonic()
-
-              // request to terminate assembly
-              assemblerProgram = -1;
-            }
-            else
-            {
-              // printf("Recieved opCode from returnMachineCodeForMnemonic() for %s is %s.\n", token, tempOpCode);
-              checkAndSaveInSYSTAB_Flag = checkAndSaveInSYSTAB(tempLabel, locCtr);
-              // printf("%d\n", checkAndSaveInSYSTAB_Flag);
-              
-              if(checkAndSaveInSYSTAB_Flag == 1)
-              {
-                // label inserted successfully
-              }
-              else if(checkAndSaveInSYSTAB_Flag == 0)
-              {
-                // label already exists
-              }
-              else if(checkAndSaveInSYSTAB_Flag == -1)
-              {
-                // error occurred in checkAndSaveInSYSTAB()
-
-                // request to terminate assembly
-                assemblerProgram = -1;
-              }
-              locCtr++;
-            }
+            // line without label
+            printf("Line %d: 2 tokens found.\n", lineCount);
           }
-
           // obtain next token from the read line
           token = strtok(NULL, s);
 
@@ -187,7 +252,7 @@ void first_pass(FILE *fp, char* fileName)
     }
 
     // delete temporary files if present
-    deleteSYSTAB();
+    // deleteSYSTAB();
 
     if(assemblerProgram == -1)
     {

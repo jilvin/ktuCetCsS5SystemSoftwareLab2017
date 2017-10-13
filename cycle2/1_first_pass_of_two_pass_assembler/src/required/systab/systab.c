@@ -3,6 +3,8 @@
 
 #include "systab.h"
 
+int array[2];
+
 // return 1 if already present
 // return 0 if not already present
 // return -1 if error occurs
@@ -79,22 +81,24 @@ int checkIfExisitingLabel(char* label, FILE* sysfp)
   }
   else
   {
-    printf("Error: SYSTAB is empty.\n");
+    // printf("Error: SYSTAB is empty.\n");
 
-    // returning error
-    return -1;
+    // returning label not found
+    return 0;
   }
 }
 
 // return 1 on successful addition
 // return 0 if already present
 // return -1 if error occurs during execution
-int checkAndSaveInSYSTAB(char* label, int locCtr)
+int* checkAndSaveInSYSTAB(char* label, int locCtr, int SYSTAB_Created)
 {
   int checkIfExisitingLabelReturn;
 
   // printf("SYSTAB works!\n");
   // printf("%s %d\n", label, locCtr);
+
+  array[1] = SYSTAB_Created;
 
   FILE *sysfp;
 
@@ -107,7 +111,11 @@ int checkAndSaveInSYSTAB(char* label, int locCtr)
 
     fprintf( sysfp, "%s %d\n", label, locCtr);
 
-    return 1;
+    array[0] = 1;
+
+    // Setting SYSTAB_Created
+    array[1] = 1;
+    return array;
   }
   else
   {
@@ -120,21 +128,26 @@ int checkAndSaveInSYSTAB(char* label, int locCtr)
 
     if(checkIfExisitingLabelReturn == 1)
     {
-      return 1;
+      array[0] = 1;
+      return array;
     }
     else if(checkIfExisitingLabelReturn == 0)
     {
-      return 0;
+      array[0] = 0;
+      return array;
     }
     else if(checkIfExisitingLabelReturn == -1)
     {
-      // Unexpected error.
-      return -1;
+      // Error in checkIfExisitingLabel().
+      array[0] = -1;
+      return array;
     }
     else
     {
       // Unexpected error.
-      return -1;
+      printf("Error: Unexpected error.\n");
+      array[0] = -1;
+      return array;
     }
   }
 }
