@@ -147,7 +147,20 @@ void first_pass_process_line(char* line)
             {
               if(strcmp(token, "BYTE") == 0)
               {
+                // obtain next token from the read line
+                token = strtok(NULL, s);
 
+                // increment token number
+                tokenNo++;
+
+                if(token != NULL && tokenNo == 3)
+                {
+                  if(strncmp(token, "C\'", 2) == 0)
+                  {
+                    // printf("Found character input in line.\n");
+                    locCtr = locCtr + 1;
+                  }
+                }
               }
               else if(strcmp(token, "WORD") == 0)
               {
@@ -179,43 +192,68 @@ void first_pass_process_line(char* line)
                   // request to terminate assembly
                   assemblerProgram = -1;
                 }
-                else
+                // printf("Recieved opCode from returnMachineCodeForMnemonic() for %s is %s.\n", token, tempOpCode);
+
+                checkAndSaveInSYSTAB_Return = checkAndSaveInSYSTAB(tempLabel, locCtr, SYSTAB_Created);
+                checkAndSaveInSYSTAB_Flag = checkAndSaveInSYSTAB_Return[0];
+                SYSTAB_Created = checkAndSaveInSYSTAB_Return[1];
+                // printf("%d\n", checkAndSaveInSYSTAB_Flag);
+
+                if(checkAndSaveInSYSTAB_Flag == 1)
                 {
-                  // printf("Recieved opCode from returnMachineCodeForMnemonic() for %s is %s.\n", token, tempOpCode);
-
-                  checkAndSaveInSYSTAB_Return = checkAndSaveInSYSTAB(tempLabel, locCtr, SYSTAB_Created);
-                  checkAndSaveInSYSTAB_Flag = checkAndSaveInSYSTAB_Return[0];
-                  SYSTAB_Created = checkAndSaveInSYSTAB_Return[1];
-                  // printf("%d\n", checkAndSaveInSYSTAB_Flag);
-
-                  if(checkAndSaveInSYSTAB_Flag == 1)
-                  {
-                    // label inserted successfully
-                    printf("Line %d: Label inserted successfully.\n", lineCount);
-                  }
-                  else if(checkAndSaveInSYSTAB_Flag == 0)
-                  {
-                    // label already exists
-                    printf("Line %d: Label already exists.\n", lineCount);
-                  }
-                  else if(checkAndSaveInSYSTAB_Flag == -1)
-                  {
-                    // error occurred in checkAndSaveInSYSTAB()
-                    printf("Line %d: Error occurred in checkAndSaveInSYSTAB().\n", lineCount);
-
-                    // request to terminate assembly
-                    assemblerProgram = -1;
-                  }
-                  locCtr++;
+                  // label inserted successfully
+                  printf("Line %d: Label inserted successfully.\n", lineCount);
                 }
+                else if(checkAndSaveInSYSTAB_Flag == 0)
+                {
+                  // label already exists
+                  printf("Error: Line %d: Label already exists.\n", lineCount);
+
+                  // request to terminate assembly
+                  assemblerProgram = -1;
+                }
+                else if(checkAndSaveInSYSTAB_Flag == -1)
+                {
+                  // error occurred in checkAndSaveInSYSTAB()
+                  printf("Line %d: Error occurred in checkAndSaveInSYSTAB().\n", lineCount);
+
+                  // request to terminate assembly
+                  assemblerProgram = -1;
+                }
+                locCtr = locCtr+3;
               }
             }
           }
           else if(totalTokenCount == 2)
           {
-            // line without label
-            printf("Line %d: 2 tokens found.\n", lineCount);
+            if(tokenNo == 1)
+            {
+              // line without label or direct value declaration
+              printf("Line %d: 2 tokens found.\n", lineCount);
+
+              if(strcmp(token, "BYTE") == 0)
+              {
+
+              }
+              else if(strcmp(token, "WORD") == 0)
+              {
+
+              }
+              else if(strcmp(token, "RESW") == 0)
+              {
+
+              }
+              else if(strcmp(token, "RESB") == 0)
+              {
+
+              }
+              else
+              {
+                locCtr = locCtr+3;
+              }
+            }
           }
+
           // obtain next token from the read line
           token = strtok(NULL, s);
 

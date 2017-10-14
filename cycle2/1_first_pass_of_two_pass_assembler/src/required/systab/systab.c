@@ -8,7 +8,7 @@ int array[2];
 // return 1 if already present
 // return 0 if not already present
 // return -1 if error occurs
-int checkIfExisitingLabel(char* label, FILE* sysfp)
+int checkIfExisitingLabel(char* label)
 {
   // Search for passed label in SYSTAB
   int labelFound = 0;
@@ -17,6 +17,11 @@ int checkIfExisitingLabel(char* label, FILE* sysfp)
   ssize_t read;
   char *token;
   const char s[2] = " ";
+
+  FILE *sysfp;
+
+  // open FILE pointer
+  sysfp = fopen("files/temp/SYSTAB", "a+");
 
   if((read = getline(&line, &len, sysfp)) != -1)
   {
@@ -55,13 +60,15 @@ int checkIfExisitingLabel(char* label, FILE* sysfp)
 
       // get first token
       token = strtok(line, s);
+
+      // printf("%s %s\n", token, label);
       if(strcmp(token, label) == 0)
       {
         // label found
         labelFound = 1;
 
-        // obtain next token from the read line
-        token = strtok(NULL, s);
+        // close FILE pointer
+        fclose(sysfp);
 
         return 1;
       }
@@ -69,9 +76,15 @@ int checkIfExisitingLabel(char* label, FILE* sysfp)
 
     if(labelFound == 0)
     {
+      // close FILE pointer
+      fclose(sysfp);
+
       // Label not found
       return 0;
     }
+
+    // close FILE pointer
+    fclose(sysfp);
 
     // Unexpected error
     printf("Error: Unexpected error occurred in SYSTAB.c\n");
@@ -83,14 +96,20 @@ int checkIfExisitingLabel(char* label, FILE* sysfp)
   {
     // printf("Error: SYSTAB is empty.\n");
 
+    // close FILE pointer
+    fclose(sysfp);
+
     // returning label not found
     return 0;
   }
 }
 
+// [0]
 // return 1 on successful addition
 // return 0 if already present
 // return -1 if error occurs during execution
+// [1]
+// return 1 if SYSTAB is created
 int* checkAndSaveInSYSTAB(char* label, int locCtr, int SYSTAB_Created)
 {
   int checkIfExisitingLabelReturn;
@@ -102,14 +121,17 @@ int* checkAndSaveInSYSTAB(char* label, int locCtr, int SYSTAB_Created)
 
   FILE *sysfp;
 
+  // open FILE pointer
   sysfp = fopen("files/temp/SYSTAB", "a+");
-
   if(!sysfp)
   {
     // SYSTAB not found or is not accessible
     printf("Error: SYSTAB not found or is inaccessible.\n");
 
     fprintf( sysfp, "%s %d\n", label, locCtr);
+
+    // close FILE pointer
+    fclose(sysfp);
 
     array[0] = 1;
 
@@ -119,21 +141,33 @@ int* checkAndSaveInSYSTAB(char* label, int locCtr, int SYSTAB_Created)
   }
   else
   {
+    // close FILE pointer
+    fclose(sysfp);
+
     // SYSTAB is accessible
     // printf("SYSTAB is accessible.\n");
 
     // check if existing label
-    checkIfExisitingLabelReturn = checkIfExisitingLabel(label, sysfp);
+    checkIfExisitingLabelReturn = checkIfExisitingLabel(label);
     // printf("%d\n", checkIfExisitingLabelReturn);
 
     if(checkIfExisitingLabelReturn == 1)
     {
-      array[0] = 1;
+      // label found
+      array[0] = 0;
       return array;
     }
     else if(checkIfExisitingLabelReturn == 0)
     {
-      array[0] = 0;
+      // open FILE pointer
+      sysfp = fopen("files/temp/SYSTAB", "a+");
+
+      // label not found
+      fprintf( sysfp, "%s %d\n", label, locCtr);
+
+      // close FILE pointer
+      fclose(sysfp);
+      array[0] = 1;
       return array;
     }
     else if(checkIfExisitingLabelReturn == -1)
