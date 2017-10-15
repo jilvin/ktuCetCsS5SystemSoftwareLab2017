@@ -166,8 +166,12 @@ void first_pass_process_line(char* line)
                     if(strncmp(token, "C\'", 2) == 0)
                     {
                       // printf("Found character input in line.\n");
-                      locCtr = locCtr + 1;
                     }
+                    else if(strncmp(token, "X\'", 2) == 0)
+                    {
+                      // printf("Found input device id in line.\n");
+                    }
+                    locCtr = locCtr + 1;
                   }
                 }
                 else if(strcmp(token, "WORD") == 0)

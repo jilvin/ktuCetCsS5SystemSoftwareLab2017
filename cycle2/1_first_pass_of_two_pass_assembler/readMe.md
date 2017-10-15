@@ -8,3 +8,6 @@ Execute from src folder.
 ./a.out file
 
 Execute from src folder.
+
+#### Current Issues
+locCtr is considered as a decimal integer. It should be in hexadecimal representation.
