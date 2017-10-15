@@ -6,10 +6,10 @@
 #include <stdlib.h>
 
 // Header for management of OPTAB
-#include "required/optab/optab.h"
+#include "../common/optab/optab.h"
 
 // Header for management of SYSTAB
-#include "required/systab/systab.h"
+#include "../common/systab/systab.h"
 
 // assemblerProgram
 // 0 - START not found yet

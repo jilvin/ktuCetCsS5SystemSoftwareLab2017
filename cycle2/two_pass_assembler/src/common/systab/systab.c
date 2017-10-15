@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include <unistd.h>
 
 #include "systab.h"
 
@@ -113,6 +114,7 @@ int checkIfExisitingLabel(char* label)
 int* checkAndSaveInSYSTAB(char* label, int locCtr, int SYSTAB_Created)
 {
   int checkIfExisitingLabelReturn;
+  char cwd[1024];
 
   // printf("SYSTAB works!\n");
   // printf("%s %d\n", label, locCtr);
@@ -123,15 +125,19 @@ int* checkAndSaveInSYSTAB(char* label, int locCtr, int SYSTAB_Created)
 
   // open FILE pointer
   sysfp = fopen("files/temp/SYSTAB", "a+");
+
   if(!sysfp)
   {
-    // SYSTAB not found or is not accessible
-    printf("Error: SYSTAB not found or is inaccessible.\n");
+    // get current working directory and store it in cwd char array.
+    getcwd(cwd, sizeof(cwd));
 
-    fprintf( sysfp, "%s %d\n", label, locCtr);
+    // SYSTAB not found or is not accessible
+    printf("Error: SYSTAB not found or is inaccessible. Make sure %s/files/temp is accessible.\n", cwd);
+
+    // fprintf( sysfp, "%s %d\n", label, locCtr);
 
     // close FILE pointer
-    fclose(sysfp);
+    // fclose(sysfp);
 
     array[0] = 1;
 
