@@ -11,6 +11,11 @@
 // Header for management of SYSTAB
 #include "required/systab/systab.h"
 
+// assemblerProgram
+// 0 - START not found yet
+// 1 - START found
+// -1 - error in finding START on the first line excepting comment lines
+// 2 - END found
 int assemblerProgram = 0;
 int startAddress = 0;
 int SYSTAB_Created = 0;
@@ -63,204 +68,256 @@ void first_pass_process_line(char* line)
   }
   else
   {
-    if(assemblerProgram == 0)
+    if(assemblerProgram != 2)
     {
-      // check if comment
-      if(line[0] == '.')
+      // END not found yet
+      if(assemblerProgram == 0)
       {
-        // printf("Comment line.\n");
-      }
-      else
-      {
-        // Check to find START first. If finding some other non-recognizable words first, terminate.
-
-        /* get the first token */
-        token = strtok(line, s);
-
-        /* walk through other tokens */
-        while( token != NULL )
+        // check if comment
+        if(line[0] == '.')
         {
-          if(tokenNo == 2)
+          // printf("Comment line.\n");
+        }
+        else
+        {
+          // Check to find START first. If finding some other non-recognizable words first, terminate.
+
+          /* get the first token */
+          token = strtok(line, s);
+
+          /* walk through other tokens */
+          while( token != NULL )
           {
-            // printf("%s\n", token);
-            if(!strcmp(token, "START"))
+            if(tokenNo == 2)
             {
-              // printf("gets here\n");
-              assemblerProgram = 1;
+              // printf("%s\n", token);
+              if(!strcmp(token, "START"))
+              {
+                // printf("gets here\n");
+                assemblerProgram = 1;
+              }
+              else
+              {
+                assemblerProgram = -1;
+              }
             }
-            else
+            else if(tokenNo == 3 && assemblerProgram == 1)
             {
-              assemblerProgram = -1;
+              // printf("%s\n", token);
+
+              // get startAddress
+              startAddress = atoi(token);
+
+              // printf("START found\n");
+
+              // Print startAddress
+              // printf("%d\n", startAddress);
+
+              // inititalizing locCtr
+              locCtr = startAddress;
             }
+            token = strtok(NULL, s);
+            tokenNo++;
           }
-          else if(tokenNo == 3 && assemblerProgram == 1)
+        }
+      }
+      else if(assemblerProgram == 1)
+      {
+        // check if comment
+        if(line[0] == '.')
+        {
+          // printf("Comment line.\n");
+        }
+        else
+        {
+          // print read line with the current value of locCtr
+          // printf("%d %s\n", locCtr, line);
+
+          // get total number of tokens in the line
+          totalTokenCount = getTotalNumberOfTokens(secondCopyLine, s);
+
+          // printf("%d\n", totalTokenCount);
+
+          /* get the first token */
+          token = strtok(line, s);
+
+          /* walk through other tokens */
+          while( token != NULL )
           {
-            // printf("%s\n", token);
+            if(totalTokenCount == 3)
+            {
+              // line with label
+              if(tokenNo == 1)
+              {
+                strcpy(tempLabel, token);
+              }
+              else if(tokenNo == 2)
+              {
+                if(strcmp(token, "BYTE") == 0)
+                {
+                  // obtain next token from the read line
+                  token = strtok(NULL, s);
 
-            // get startAddress
-            startAddress = atoi(token);
+                  // increment token number
+                  tokenNo++;
 
-            // printf("START found\n");
+                  if(token != NULL && tokenNo == 3)
+                  {
+                    if(strncmp(token, "C\'", 2) == 0)
+                    {
+                      // printf("Found character input in line.\n");
+                      locCtr = locCtr + 1;
+                    }
+                  }
+                }
+                else if(strcmp(token, "WORD") == 0)
+                {
+                  // obtain next token from the read line
+                  token = strtok(NULL, s);
 
-            // Print startAddress
-            // printf("%d\n", startAddress);
+                  // increment token number
+                  tokenNo++;
 
-            // inititalizing locCtr
-            locCtr = startAddress;
+                  if(token != NULL && tokenNo == 3)
+                  {
+                    locCtr = locCtr + 3;
+                  }
+                }
+                else if(strcmp(token, "RESW") == 0)
+                {
+                  // obtain next token from the read line
+                  token = strtok(NULL, s);
+
+                  // increment token number
+                  tokenNo++;
+
+                  if(token != NULL && tokenNo == 3)
+                  {
+                    locCtr = locCtr + (3 * atoi(token));
+                  }
+                }
+                else if(strcmp(token, "RESB") == 0)
+                {
+                  // obtain next token from the read line
+                  token = strtok(NULL, s);
+
+                  // increment token number
+                  tokenNo++;
+
+                  if(token != NULL && tokenNo == 3)
+                  {
+                    locCtr = locCtr + atoi(token);
+                  }
+                }
+                else
+                {
+                  // printf("%s\n", token);
+                  tempOpCode = returnMachineCodeForMnemonic(token);
+
+                  if(strcmp(tempOpCode, "GG") == 0)
+                  {
+                    // Invalid mnemonic found
+                    printf("Error: Invalid mnemonic found on line %d\n", lineCount);
+                    assemblerProgram = -1;
+                  }
+                  else if(strcmp(tempOpCode, "HH") == 0)
+                  {
+                    // Error encountered in returnMachineCodeForMnemonic()
+
+                    // request to terminate assembly
+                    assemblerProgram = -1;
+                  }
+
+                  // printf("Recieved opCode from returnMachineCodeForMnemonic() for %s is %s.\n", token, tempOpCode);
+
+                  checkAndSaveInSYSTAB_Return = checkAndSaveInSYSTAB(tempLabel, locCtr, SYSTAB_Created);
+                  checkAndSaveInSYSTAB_Flag = checkAndSaveInSYSTAB_Return[0];
+                  SYSTAB_Created = checkAndSaveInSYSTAB_Return[1];
+                  // printf("%d\n", checkAndSaveInSYSTAB_Flag);
+
+                  if(checkAndSaveInSYSTAB_Flag == 1)
+                  {
+                    // label inserted successfully
+                    // printf("Line %d: Label inserted successfully.\n", lineCount);
+                  }
+                  else if(checkAndSaveInSYSTAB_Flag == 0)
+                  {
+                    // label already exists
+                    printf("Error: Line %d: Label already exists.\n", lineCount);
+
+                    // request to terminate assembly
+                    assemblerProgram = -1;
+                  }
+                  else if(checkAndSaveInSYSTAB_Flag == -1)
+                  {
+                    // error occurred in checkAndSaveInSYSTAB()
+                    printf("Line %d: Error occurred in checkAndSaveInSYSTAB().\n", lineCount);
+
+                    // request to terminate assembly
+                    assemblerProgram = -1;
+                  }
+                  locCtr = locCtr+3;
+                }
+              }
+            }
+            else if(totalTokenCount == 2)
+            {
+              if(tokenNo == 1)
+              {
+                // line without label or direct value declaration
+                // printf("Line %d: 2 tokens found.\n", lineCount);
+
+                if(strcmp(token, "END") == 0)
+                {
+                  // END found
+                  assemblerProgram = 2;
+                }
+                else
+                {
+                  // printf("%s\n", token);
+                  tempOpCode = returnMachineCodeForMnemonic(token);
+
+                  if(strcmp(tempOpCode, "GG") == 0)
+                  {
+                    // Invalid mnemonic found
+                    printf("Error: Invalid mnemonic found on line %d\n", lineCount);
+                    assemblerProgram = -1;
+                  }
+                  else if(strcmp(tempOpCode, "HH") == 0)
+                  {
+                    // Error encountered in returnMachineCodeForMnemonic()
+
+                    // request to terminate assembly
+                    assemblerProgram = -1;
+                  }
+
+                  // printf("Recieved opCode from returnMachineCodeForMnemonic() for %s is %s.\n", token, tempOpCode);
+
+                  locCtr = locCtr+3;
+                }
+              }
+            }
+            else if(totalTokenCount == 1)
+            {
+              locCtr = locCtr+3;
+            }
+
+            // obtain next token from the read line
+            token = strtok(NULL, s);
+
+            // increment token number
+            tokenNo++;
           }
-          token = strtok(NULL, s);
-          tokenNo++;
         }
       }
     }
-    else if(assemblerProgram == 1)
+    else
     {
-      // check if comment
-      if(line[0] == '.')
-      {
-        // printf("Comment line.\n");
-      }
-      else
-      {
-        // print read line
-        // printf("%s\n", line);
+      // END already found
+      printf("Error: Non-empty lines found after END assembler directive.\n");
 
-        // get total number of tokens in the line
-        totalTokenCount = getTotalNumberOfTokens(secondCopyLine, s);
-
-        // printf("%d\n", totalTokenCount);
-
-        /* get the first token */
-        token = strtok(line, s);
-
-        /* walk through other tokens */
-        while( token != NULL )
-        {
-          if(totalTokenCount == 3)
-          {
-            // line with label
-            if(tokenNo == 1)
-            {
-              strcpy(tempLabel, token);
-            }
-            else if(tokenNo == 2)
-            {
-              if(strcmp(token, "BYTE") == 0)
-              {
-                // obtain next token from the read line
-                token = strtok(NULL, s);
-
-                // increment token number
-                tokenNo++;
-
-                if(token != NULL && tokenNo == 3)
-                {
-                  if(strncmp(token, "C\'", 2) == 0)
-                  {
-                    // printf("Found character input in line.\n");
-                    locCtr = locCtr + 1;
-                  }
-                }
-              }
-              else if(strcmp(token, "WORD") == 0)
-              {
-
-              }
-              else if(strcmp(token, "RESW") == 0)
-              {
-
-              }
-              else if(strcmp(token, "RESB") == 0)
-              {
-
-              }
-              else
-              {
-                // printf("%s\n", token);
-                tempOpCode = returnMachineCodeForMnemonic(token);
-
-                if(strcmp(tempOpCode, "GG") == 0)
-                {
-                  // Invalid mnemonic found
-                  printf("Error: Invalid mnemonic found on line %d\n", lineCount);
-                  assemblerProgram = -1;
-                }
-                else if(strcmp(tempOpCode, "HH") == 0)
-                {
-                  // Error encountered in returnMachineCodeForMnemonic()
-
-                  // request to terminate assembly
-                  assemblerProgram = -1;
-                }
-                // printf("Recieved opCode from returnMachineCodeForMnemonic() for %s is %s.\n", token, tempOpCode);
-
-                checkAndSaveInSYSTAB_Return = checkAndSaveInSYSTAB(tempLabel, locCtr, SYSTAB_Created);
-                checkAndSaveInSYSTAB_Flag = checkAndSaveInSYSTAB_Return[0];
-                SYSTAB_Created = checkAndSaveInSYSTAB_Return[1];
-                // printf("%d\n", checkAndSaveInSYSTAB_Flag);
-
-                if(checkAndSaveInSYSTAB_Flag == 1)
-                {
-                  // label inserted successfully
-                  printf("Line %d: Label inserted successfully.\n", lineCount);
-                }
-                else if(checkAndSaveInSYSTAB_Flag == 0)
-                {
-                  // label already exists
-                  printf("Error: Line %d: Label already exists.\n", lineCount);
-
-                  // request to terminate assembly
-                  assemblerProgram = -1;
-                }
-                else if(checkAndSaveInSYSTAB_Flag == -1)
-                {
-                  // error occurred in checkAndSaveInSYSTAB()
-                  printf("Line %d: Error occurred in checkAndSaveInSYSTAB().\n", lineCount);
-
-                  // request to terminate assembly
-                  assemblerProgram = -1;
-                }
-                locCtr = locCtr+3;
-              }
-            }
-          }
-          else if(totalTokenCount == 2)
-          {
-            if(tokenNo == 1)
-            {
-              // line without label or direct value declaration
-              printf("Line %d: 2 tokens found.\n", lineCount);
-
-              if(strcmp(token, "BYTE") == 0)
-              {
-
-              }
-              else if(strcmp(token, "WORD") == 0)
-              {
-
-              }
-              else if(strcmp(token, "RESW") == 0)
-              {
-
-              }
-              else if(strcmp(token, "RESB") == 0)
-              {
-
-              }
-              else
-              {
-                locCtr = locCtr+3;
-              }
-            }
-          }
-
-          // obtain next token from the read line
-          token = strtok(NULL, s);
-
-          // increment token number
-          tokenNo++;
-        }
-      }
+      // request to terminate assembly
+      assemblerProgram = -1;
     }
   }
 }
@@ -297,6 +354,11 @@ void first_pass(FILE *fp, char* fileName)
       // terminating assembly.
       printf("Assembling terminated.\n");
     }
+    else if(assemblerProgram == 2)
+    {
+      // first pass completed successfully.
+      printf("First pass completed successfully.\n");
+    }
   }
   else
   {
@@ -317,7 +379,7 @@ int main(int argNo, char** args)
     char cwd[1024];
 
     printf("Two-Pass Assembler for SIC Architecture\n");
-    printf("Accessing %s.\n", args[1]);
+    // printf("Accessing %s.\n", args[1]);
     fp = fopen(args[1], "r");
 
     // get current working directory and store it in cwd char array.
