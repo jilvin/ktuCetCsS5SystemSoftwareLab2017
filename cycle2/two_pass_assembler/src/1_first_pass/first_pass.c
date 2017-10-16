@@ -11,6 +11,9 @@
 // Header for management of SYSTAB
 #include "../common/systab/systab.h"
 
+// Header for management of INTERMEDIATE
+#include "../common/intermediate/intermediate.h"
+
 // assemblerProgram
 // 0 - START not found yet
 // 1 - START found
@@ -119,6 +122,9 @@ void first_pass_process_line(char* line)
             token = strtok(NULL, s);
             tokenNo++;
           }
+
+          // save the line in INTERMEDIATE
+          intermediate_save_line(line);
         }
       }
       else if(assemblerProgram == 1)
@@ -312,6 +318,9 @@ void first_pass_process_line(char* line)
             // increment token number
             tokenNo++;
           }
+
+          // save the line in INTERMEDIATE
+          intermediate_save_line(line);
         }
       }
     }
