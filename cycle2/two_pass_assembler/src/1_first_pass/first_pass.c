@@ -85,6 +85,9 @@ void first_pass_process_line(char* line)
         {
           // Check to find START first. If finding some other non-recognizable words first, terminate.
 
+          // save the line in INTERMEDIATE
+          intermediate_save_line(line);
+          
           /* get the first token */
           token = strtok(line, s);
 
@@ -122,9 +125,6 @@ void first_pass_process_line(char* line)
             token = strtok(NULL, s);
             tokenNo++;
           }
-
-          // save the line in INTERMEDIATE
-          intermediate_save_line(line);
         }
       }
       else if(assemblerProgram == 1)
@@ -138,6 +138,9 @@ void first_pass_process_line(char* line)
         {
           // print read line with the current value of locCtr
           // printf("%d %s\n", locCtr, line);
+
+          // save the line in INTERMEDIATE
+          intermediate_save_line(line);
 
           // get total number of tokens in the line
           totalTokenCount = getTotalNumberOfTokens(secondCopyLine, s);
@@ -318,9 +321,6 @@ void first_pass_process_line(char* line)
             // increment token number
             tokenNo++;
           }
-
-          // save the line in INTERMEDIATE
-          intermediate_save_line(line);
         }
       }
     }

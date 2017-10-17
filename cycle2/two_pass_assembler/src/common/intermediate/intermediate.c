@@ -4,7 +4,7 @@
 int intermediate_save_line(char* line)
 {
   // print recieved line
-  printf("%s\n", line);
+  printf("%s", line);
 
   FILE *intermediatefp;
   char cwd[1024];
@@ -26,7 +26,7 @@ int intermediate_save_line(char* line)
   else
   {
     // appending line on to INTERMEDIATE
-    fprintf(intermediatefp, "%s\n", line);
+    fprintf(intermediatefp, "%s", line);
 
     // close FILE pointer
     fclose(intermediatefp);
