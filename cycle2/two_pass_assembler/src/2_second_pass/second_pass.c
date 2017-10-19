@@ -74,6 +74,7 @@ void second_pass_process_line(char* line, int lineNo)
       // END not found yet
       if(assemblerProgram == 0)
       {
+        // START not found yet
         // check if comment
         if(line[0] == '.')
         {
@@ -82,9 +83,6 @@ void second_pass_process_line(char* line, int lineNo)
         else
         {
           // Check to find START first. If finding some other non-recognizable words first, terminate.
-
-          // save the line in INTERMEDIATE
-          intermediate_save_line(line);
 
           /* get the first token */
           token = strtok(line, s);
@@ -105,18 +103,6 @@ void second_pass_process_line(char* line, int lineNo)
                 assemblerProgram = -1;
               }
             }
-            else if(tokenNo == 3 && assemblerProgram == 1)
-            {
-              // printf("%s\n", token);
-
-              // get startAddress
-              startAddress = atoi(token);
-
-              // printf("START found\n");
-
-              // Print startAddress
-              // printf("%d\n", startAddress);
-            }
             token = strtok(NULL, s);
             tokenNo++;
           }
@@ -124,6 +110,7 @@ void second_pass_process_line(char* line, int lineNo)
       }
       else if(assemblerProgram == 1)
       {
+        // START has already been found
         // check if comment
         if(line[0] == '.')
         {
@@ -133,9 +120,6 @@ void second_pass_process_line(char* line, int lineNo)
         {
           // print read line with the current value of locCtr
           // printf("%d %s\n", locCtr, line);
-
-          // save the line in INTERMEDIATE
-          intermediate_save_line(line);
 
           // get total number of tokens in the line
           totalTokenCount = getTotalNumberOfTokens(secondCopyLine, s);
