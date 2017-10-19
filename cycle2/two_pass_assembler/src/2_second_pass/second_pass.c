@@ -26,12 +26,34 @@ int lineCount=0;
 // to obtain valid line from intermediate_read_line
 // char *line = NULL;
 
+int getTotalNumberOfTokens(char* line, const char s[2])
+{
+  char *token;
+  int tokenNo = 0;
+
+  /* get the first token */
+  token = strtok(line, s);
+
+  /* walk through other tokens */
+  while( token != NULL )
+  {
+    // printf("%s", token);
+    token = strtok(NULL, s);
+    tokenNo++;
+  }
+
+  // printf("%d\n", tokenNo);
+  return tokenNo;
+}
+
 // function to operate on the line read from second_pass()
 void second_pass_process_line(char* line, int lineNo)
 {
   int len, tokenNo=1, totalTokenCount;
   const char s[2] = " ";
   char *token;
+  char tempLabel[20];
+  char* tempOpCode = NULL;
 
   // obtain length of line
   len = strlen(line);
@@ -153,7 +175,6 @@ void second_pass_process_line(char* line, int lineNo)
                     {
                       // printf("Found input device id in line.\n");
                     }
-                    locCtr = locCtr + 1;
                   }
                 }
                 else if(strcmp(token, "WORD") == 0)
@@ -166,7 +187,6 @@ void second_pass_process_line(char* line, int lineNo)
 
                   if(token != NULL && tokenNo == 3)
                   {
-                    locCtr = locCtr + 3;
                   }
                 }
                 else if(strcmp(token, "RESW") == 0)
@@ -179,7 +199,6 @@ void second_pass_process_line(char* line, int lineNo)
 
                   if(token != NULL && tokenNo == 3)
                   {
-                    locCtr = locCtr + (3 * atoi(token));
                   }
                 }
                 else if(strcmp(token, "RESB") == 0)
@@ -192,7 +211,6 @@ void second_pass_process_line(char* line, int lineNo)
 
                   if(token != NULL && tokenNo == 3)
                   {
-                    locCtr = locCtr + atoi(token);
                   }
                 }
                 else

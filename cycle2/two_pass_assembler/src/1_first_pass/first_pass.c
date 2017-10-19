@@ -57,9 +57,15 @@ void first_pass_process_line(char* line, int lineNo)
   // obtain length of line
   len = strlen(line);
 
+  // for getTotalNumberOfTokens()
   char secondCopyLine[strlen(line) + 1];
 
   strcpy(secondCopyLine, line);
+
+  // for intermediate_save_line()
+  char thirdCopyLine[strlen(line) + 1];
+
+  strcpy(thirdCopyLine, line);
 
   // check for empty line
   if(len == 1 && line[0] == '\n')
@@ -82,9 +88,6 @@ void first_pass_process_line(char* line, int lineNo)
         {
           // Check to find START first. If finding some other non-recognizable words first, terminate.
 
-          // save the line in INTERMEDIATE
-          intermediate_save_line(line);
-
           /* get the first token */
           token = strtok(line, s);
 
@@ -98,6 +101,9 @@ void first_pass_process_line(char* line, int lineNo)
               {
                 // printf("gets here\n");
                 assemblerProgram = 1;
+
+                // save the line in INTERMEDIATE
+                intermediate_save_line(thirdCopyLine);
               }
               else
               {
@@ -135,9 +141,6 @@ void first_pass_process_line(char* line, int lineNo)
         {
           // print read line with the current value of locCtr
           // printf("%d %s\n", locCtr, line);
-
-          // save the line in INTERMEDIATE
-          intermediate_save_line(line);
 
           // get total number of tokens in the line
           totalTokenCount = getTotalNumberOfTokens(secondCopyLine, s);
@@ -179,6 +182,9 @@ void first_pass_process_line(char* line, int lineNo)
                     }
                     locCtr = locCtr + 1;
                   }
+
+                  // save the line in INTERMEDIATE
+                  intermediate_save_line(thirdCopyLine);
                 }
                 else if(strcmp(token, "WORD") == 0)
                 {
@@ -192,6 +198,9 @@ void first_pass_process_line(char* line, int lineNo)
                   {
                     locCtr = locCtr + 3;
                   }
+
+                  // save the line in INTERMEDIATE
+                  intermediate_save_line(thirdCopyLine);
                 }
                 else if(strcmp(token, "RESW") == 0)
                 {
@@ -228,6 +237,7 @@ void first_pass_process_line(char* line, int lineNo)
                   {
                     // Invalid mnemonic found
                     printf("Error: Invalid mnemonic found on line %d\n", lineNo);
+
                     assemblerProgram = -1;
                   }
                   else if(strcmp(tempOpCode, "HH") == 0)
@@ -237,36 +247,41 @@ void first_pass_process_line(char* line, int lineNo)
                     // request to terminate assembly
                     assemblerProgram = -1;
                   }
-
-                  // printf("Recieved opCode from returnMachineCodeForMnemonic() for %s is %s.\n", token, tempOpCode);
-
-                  checkAndSaveInSYSTAB_Return = checkAndSaveInSYSTAB(tempLabel, locCtr, SYSTAB_Created);
-                  checkAndSaveInSYSTAB_Flag = checkAndSaveInSYSTAB_Return[0];
-                  SYSTAB_Created = checkAndSaveInSYSTAB_Return[1];
-                  // printf("%d\n", checkAndSaveInSYSTAB_Flag);
-
-                  if(checkAndSaveInSYSTAB_Flag == 1)
+                  else
                   {
-                    // label inserted successfully
-                    // printf("Line %d: Label inserted successfully.\n", lineNo);
-                  }
-                  else if(checkAndSaveInSYSTAB_Flag == 0)
-                  {
-                    // label already exists
-                    printf("Error: Line %d: Label already exists.\n", lineNo);
+                    // printf("Recieved opCode from returnMachineCodeForMnemonic() for %s is %s.\n", token, tempOpCode);
 
-                    // request to terminate assembly
-                    assemblerProgram = -1;
-                  }
-                  else if(checkAndSaveInSYSTAB_Flag == -1)
-                  {
-                    // error occurred in checkAndSaveInSYSTAB()
-                    printf("Line %d: Error occurred in checkAndSaveInSYSTAB().\n", lineNo);
+                    checkAndSaveInSYSTAB_Return = checkAndSaveInSYSTAB(tempLabel, locCtr, SYSTAB_Created);
+                    checkAndSaveInSYSTAB_Flag = checkAndSaveInSYSTAB_Return[0];
+                    SYSTAB_Created = checkAndSaveInSYSTAB_Return[1];
+                    // printf("%d\n", checkAndSaveInSYSTAB_Flag);
 
-                    // request to terminate assembly
-                    assemblerProgram = -1;
+                    if(checkAndSaveInSYSTAB_Flag == 1)
+                    {
+                      // label inserted successfully
+                      // printf("Line %d: Label inserted successfully.\n", lineNo);
+                    }
+                    else if(checkAndSaveInSYSTAB_Flag == 0)
+                    {
+                      // label already exists
+                      printf("Error: Line %d: Label already exists.\n", lineNo);
+
+                      // request to terminate assembly
+                      assemblerProgram = -1;
+                    }
+                    else if(checkAndSaveInSYSTAB_Flag == -1)
+                    {
+                      // error occurred in checkAndSaveInSYSTAB()
+                      printf("Line %d: Error occurred in checkAndSaveInSYSTAB().\n", lineNo);
+
+                      // request to terminate assembly
+                      assemblerProgram = -1;
+                    }
+                    locCtr = locCtr+3;
+
+                    // save the line in INTERMEDIATE
+                    intermediate_save_line(thirdCopyLine);
                   }
-                  locCtr = locCtr+3;
                 }
               }
             }
@@ -281,6 +296,9 @@ void first_pass_process_line(char* line, int lineNo)
                 {
                   // END found
                   assemblerProgram = 2;
+
+                  // save the line in INTERMEDIATE
+                  intermediate_save_line(thirdCopyLine);
                 }
                 else
                 {
@@ -300,16 +318,24 @@ void first_pass_process_line(char* line, int lineNo)
                     // request to terminate assembly
                     assemblerProgram = -1;
                   }
+                  else
+                  {
+                    // printf("Recieved opCode from returnMachineCodeForMnemonic() for %s is %s.\n", token, tempOpCode);
 
-                  // printf("Recieved opCode from returnMachineCodeForMnemonic() for %s is %s.\n", token, tempOpCode);
+                    locCtr = locCtr+3;
 
-                  locCtr = locCtr+3;
+                    // save the line in INTERMEDIATE
+                    intermediate_save_line(thirdCopyLine);
+                  }
                 }
               }
             }
             else if(totalTokenCount == 1)
             {
               locCtr = locCtr+3;
+              
+              // save the line in INTERMEDIATE
+              intermediate_save_line(thirdCopyLine);
             }
 
             // obtain next token from the read line
