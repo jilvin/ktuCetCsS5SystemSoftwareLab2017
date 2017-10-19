@@ -23,7 +23,6 @@ int assemblerProgram = 0;
 int startAddress = 0;
 int SYSTAB_Created = 0;
 int locCtr;
-int lineCount=0;
 
 int getTotalNumberOfTokens(char* line, const char s[2])
 {
@@ -46,7 +45,7 @@ int getTotalNumberOfTokens(char* line, const char s[2])
 }
 
 // function to operate on the line read from first_pass()
-void first_pass_process_line(char* line)
+void first_pass_process_line(char* line, int lineNo)
 {
   int len, tokenNo=1, checkAndSaveInSYSTAB_Flag, totalTokenCount;
   int* checkAndSaveInSYSTAB_Return;
@@ -61,8 +60,6 @@ void first_pass_process_line(char* line)
   char secondCopyLine[strlen(line) + 1];
 
   strcpy(secondCopyLine, line);
-
-  lineCount++;
 
   // check for empty line
   if(len == 1 && line[0] == '\n')
@@ -87,7 +84,7 @@ void first_pass_process_line(char* line)
 
           // save the line in INTERMEDIATE
           intermediate_save_line(line);
-          
+
           /* get the first token */
           token = strtok(line, s);
 
@@ -230,7 +227,7 @@ void first_pass_process_line(char* line)
                   if(strcmp(tempOpCode, "GG") == 0)
                   {
                     // Invalid mnemonic found
-                    printf("Error: Invalid mnemonic found on line %d\n", lineCount);
+                    printf("Error: Invalid mnemonic found on line %d\n", lineNo);
                     assemblerProgram = -1;
                   }
                   else if(strcmp(tempOpCode, "HH") == 0)
@@ -251,12 +248,12 @@ void first_pass_process_line(char* line)
                   if(checkAndSaveInSYSTAB_Flag == 1)
                   {
                     // label inserted successfully
-                    // printf("Line %d: Label inserted successfully.\n", lineCount);
+                    // printf("Line %d: Label inserted successfully.\n", lineNo);
                   }
                   else if(checkAndSaveInSYSTAB_Flag == 0)
                   {
                     // label already exists
-                    printf("Error: Line %d: Label already exists.\n", lineCount);
+                    printf("Error: Line %d: Label already exists.\n", lineNo);
 
                     // request to terminate assembly
                     assemblerProgram = -1;
@@ -264,7 +261,7 @@ void first_pass_process_line(char* line)
                   else if(checkAndSaveInSYSTAB_Flag == -1)
                   {
                     // error occurred in checkAndSaveInSYSTAB()
-                    printf("Line %d: Error occurred in checkAndSaveInSYSTAB().\n", lineCount);
+                    printf("Line %d: Error occurred in checkAndSaveInSYSTAB().\n", lineNo);
 
                     // request to terminate assembly
                     assemblerProgram = -1;
@@ -278,7 +275,7 @@ void first_pass_process_line(char* line)
               if(tokenNo == 1)
               {
                 // line without label or direct value declaration
-                // printf("Line %d: 2 tokens found.\n", lineCount);
+                // printf("Line %d: 2 tokens found.\n", lineNo);
 
                 if(strcmp(token, "END") == 0)
                 {
@@ -293,7 +290,7 @@ void first_pass_process_line(char* line)
                   if(strcmp(tempOpCode, "GG") == 0)
                   {
                     // Invalid mnemonic found
-                    printf("Error: Invalid mnemonic found on line %d\n", lineCount);
+                    printf("Error: Invalid mnemonic found on line %d\n", lineNo);
                     assemblerProgram = -1;
                   }
                   else if(strcmp(tempOpCode, "HH") == 0)
@@ -341,6 +338,7 @@ void first_pass(FILE *fp, char* fileName)
   char *line = NULL;
   size_t len = 0;
   ssize_t read;
+  int lineNo=1;
 
   if((read = getline(&line, &len, fp)) != -1)
   {
@@ -348,15 +346,17 @@ void first_pass(FILE *fp, char* fileName)
     // printf("%s", line);
 
     // process the read line
-    first_pass_process_line(line);
+    first_pass_process_line(line, lineNo);
 
     while ((read = getline(&line, &len, fp)) != -1 && assemblerProgram != -1)
     {
       // printf("Retrieved line of length %zu :\n", read);
       // printf("%s", line);
 
+      lineNo++;
+
       // process the read line
-      first_pass_process_line(line);
+      first_pass_process_line(line, lineNo);
     }
 
     // delete temporary files if present
