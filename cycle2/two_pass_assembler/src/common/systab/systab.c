@@ -6,6 +6,11 @@
 
 int array[2];
 
+RETURN_ADDRESS_IF_EXISTING_LABEL_RETURN_OBJECT returnAddressIfExisitingLabel(char* label)
+{
+
+}
+
 // return 1 if already present
 // return 0 if not already present
 // return -1 if error occurs

@@ -24,6 +24,7 @@ int startAddress = 0;
 int SYSTAB_Created = 0;
 int locCtr;
 
+// obtain number of tokens present
 int getTotalNumberOfTokens(char* line, const char s[2])
 {
   char *token;
@@ -494,9 +495,6 @@ void first_pass(FILE *fp, char* fileName)
       // process the read line
       first_pass_process_line(line, lineNo);
     }
-
-    // delete temporary files if present
-    // deleteSYSTAB();
 
     if(assemblerProgram == -1)
     {

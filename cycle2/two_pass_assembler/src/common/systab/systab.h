@@ -5,7 +5,17 @@
 #ifndef __SYSTAB_H__
 #define __SYSTAB_H__
 
+// public struct for returnAddressIfExisitingLabel()
+typedef struct
+{
+  char* line;
+  int assemblerProgram;
+} RETURN_ADDRESS_IF_EXISTING_LABEL_RETURN_OBJECT;
+
+extern RETURN_ADDRESS_IF_EXISTING_LABEL_RETURN_OBJECT returnAddressIfExisitingLabel(char* label);
+
 extern int* checkAndSaveInSYSTAB(char* label, int locCtr, int SYSTAB_Created);
+
 extern void deleteSYSTAB();
 
 #endif

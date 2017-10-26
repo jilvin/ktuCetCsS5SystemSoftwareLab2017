@@ -6,14 +6,14 @@
 #define __INTERMEDIATE_H__
 
 // public struct for intermediate_read_line_return
-typedef struct intermediate_read_line_return
+typedef struct
 {
   char* line;
   int assemblerProgram;
-} INTERMEDIATE_READ_LINE_RETURN;
+} INTERMEDIATE_READ_LINE_RETURN_OBJECT;
 
 // function to read line from INTERMEDIATE. must resume from next unread line.
-extern struct intermediate_read_line_return intermediate_read_line(int lineNo, int assemblerProgram);
+extern INTERMEDIATE_READ_LINE_RETURN_OBJECT intermediate_read_line(int lineNo, int assemblerProgram);
 
 // function to save line to INTERMEDIATE
 extern int intermediate_save_line(char* line);

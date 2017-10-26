@@ -5,7 +5,7 @@
 #include "intermediate.h"
 
 // function to read line from INTERMEDIATE. must resume from next unread line.
-INTERMEDIATE_READ_LINE_RETURN intermediate_read_line(int lineNo, int assemblerProgram)
+INTERMEDIATE_READ_LINE_RETURN_OBJECT intermediate_read_line(int lineNo, int assemblerProgram)
 {
   FILE *intermediatefp;
   char cwd[1024];
@@ -14,7 +14,7 @@ INTERMEDIATE_READ_LINE_RETURN intermediate_read_line(int lineNo, int assemblerPr
   ssize_t read;
   char* line = NULL;
 
-  INTERMEDIATE_READ_LINE_RETURN returnStruct;
+  INTERMEDIATE_READ_LINE_RETURN_OBJECT returnStruct;
 
   // open FILE pointer
   intermediatefp = fopen("files/temp/INTERMEDIATE", "a+");

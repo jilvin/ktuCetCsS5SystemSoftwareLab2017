@@ -23,9 +23,41 @@ int assemblerProgram = 0;
 int startAddress = 0;
 int lineCount=0;
 
-// to obtain valid line from intermediate_read_line
-// char *line = NULL;
+// 1 - successfull save to file
+// -1 - error occurred during saveOutfile
+int saveOutfile(char* line)
+{
+  FILE *outfilefp;
+  char cwd[1024];
 
+  // open FILE pointer
+  outfilefp = fopen("OUTFILE", "a+");
+
+  if(!outfilefp)
+  {
+    // get current working directory and store it in cwd char array.
+    getcwd(cwd, sizeof(cwd));
+
+    // SYSTAB not found or is not accessible
+    printf("Error: OUTFILE not found or is inaccessible. Make sure %s is accessible.\n", cwd);
+
+    // return error
+    return -1;
+  }
+  else
+  {
+    // appending line on to OUTFILE
+    fprintf(outfilefp, "%s\n", line);
+
+    // close FILE pointer
+    fclose(outfilefp);
+
+    // return success
+    return 1;
+  }
+}
+
+// obtain number of tokens present
 int getTotalNumberOfTokens(char* line, const char s[2])
 {
   char *token;
@@ -49,10 +81,9 @@ int getTotalNumberOfTokens(char* line, const char s[2])
 // function to operate on the line read from second_pass()
 void second_pass_process_line(char* line, int lineNo)
 {
-  int len, tokenNo=1, totalTokenCount;
+  int len, tokenNo=1, totalTokenCount, saveOutfileReturn;
   const char s[2] = " ";
   char *token;
-  char tempLabel[20];
   char* tempOpCode = NULL;
 
   // obtain length of line
@@ -137,7 +168,6 @@ void second_pass_process_line(char* line, int lineNo)
               // line with label
               if(tokenNo == 1)
               {
-                strcpy(tempLabel, token);
               }
               else if(tokenNo == 2)
               {
@@ -215,36 +245,26 @@ void second_pass_process_line(char* line, int lineNo)
                     // request to terminate assembly
                     assemblerProgram = -1;
                   }
-
-                  // printf("Recieved opCode from returnMachineCodeForMnemonic() for %s is %s.\n", token, tempOpCode);
-
-                  checkAndSaveInSYSTAB_Return = checkAndSaveInSYSTAB(tempLabel, locCtr, SYSTAB_Created);
-                  checkAndSaveInSYSTAB_Flag = checkAndSaveInSYSTAB_Return[0];
-                  SYSTAB_Created = checkAndSaveInSYSTAB_Return[1];
-                  // printf("%d\n", checkAndSaveInSYSTAB_Flag);
-
-                  if(checkAndSaveInSYSTAB_Flag == 1)
+                  else
                   {
-                    // label inserted successfully
-                    // printf("Line %d: Label inserted successfully.\n", lineCount);
-                  }
-                  else if(checkAndSaveInSYSTAB_Flag == 0)
-                  {
-                    // label already exists
-                    printf("Error: Line %d: Label already exists.\n", lineCount);
+                    // printf("Recieved opCode from returnMachineCodeForMnemonic() for %s is %s.\n", token, tempOpCode);
 
-                    // request to terminate assembly
-                    assemblerProgram = -1;
-                  }
-                  else if(checkAndSaveInSYSTAB_Flag == -1)
-                  {
-                    // error occurred in checkAndSaveInSYSTAB()
-                    printf("Line %d: Error occurred in checkAndSaveInSYSTAB().\n", lineCount);
 
-                    // request to terminate assembly
-                    assemblerProgram = -1;
+
+                    saveOutfileReturn = saveOutfile(tempOpCode);
+
+                    if(saveOutfileReturn == 1)
+                    {
+                      // printf("%d\n", saveOutfileReturn);
+                    }
+                    else
+                    {
+                      //Error in saveOutfile()
+
+                      // request to terminate assembly
+                      assemblerProgram = -1;
+                    }
                   }
-                  locCtr = locCtr+3;
                 }
               }
             }
@@ -280,14 +300,11 @@ void second_pass_process_line(char* line, int lineNo)
                   }
 
                   // printf("Recieved opCode from returnMachineCodeForMnemonic() for %s is %s.\n", token, tempOpCode);
-
-                  locCtr = locCtr+3;
                 }
               }
             }
             else if(totalTokenCount == 1)
             {
-              locCtr = locCtr+3;
             }
 
             // obtain next token from the read line
@@ -319,7 +336,7 @@ void second_pass()
 
   obtainStruct = intermediate_read_line(lineNo, assemblerProgram);
 
-  while(obtainStruct.line != NULL)
+  while(obtainStruct.line != NULL && assemblerProgram != -1)
   {
     printf("%s", obtainStruct.line);
 
@@ -328,6 +345,20 @@ void second_pass()
     lineNo++;
 
     obtainStruct = intermediate_read_line(lineNo, assemblerProgram);
+  }
+
+  // delete temporary files if present
+  // deleteSYSTAB();
+
+  if(assemblerProgram == -1)
+  {
+    // terminating assembly.
+    printf("Assembling terminated.\n");
+  }
+  else if(assemblerProgram == 2)
+  {
+    // first pass completed successfully.
+    printf("First pass completed successfully.\n");
   }
 }
 
