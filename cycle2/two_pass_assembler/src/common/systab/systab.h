@@ -8,8 +8,8 @@
 // public struct for returnAddressIfExisitingLabel()
 typedef struct
 {
-  char* line;
-  int assemblerProgram;
+  int resultFlag;
+  char* line; // for storing address
 } RETURN_ADDRESS_IF_EXISTING_LABEL_RETURN_OBJECT;
 
 extern RETURN_ADDRESS_IF_EXISTING_LABEL_RETURN_OBJECT returnAddressIfExisitingLabel(char* label);

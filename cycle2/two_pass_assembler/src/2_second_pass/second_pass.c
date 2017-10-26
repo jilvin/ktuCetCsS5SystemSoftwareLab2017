@@ -81,10 +81,12 @@ int getTotalNumberOfTokens(char* line, const char s[2])
 // function to operate on the line read from second_pass()
 void second_pass_process_line(char* line, int lineNo)
 {
+  RETURN_ADDRESS_IF_EXISTING_LABEL_RETURN_OBJECT returnedObject;
   int len, tokenNo=1, totalTokenCount, saveOutfileReturn;
   const char s[2] = " ";
-  char *token;
+  char *token, *thirdToken;
   char* tempOpCode = NULL;
+  char outLine[6];
 
   // obtain length of line
   len = strlen(line);
@@ -229,8 +231,11 @@ void second_pass_process_line(char* line, int lineNo)
                 }
                 else
                 {
-                  // printf("%s\n", token);
+                  // obtain next token from the read line
+                  thirdToken = strtok(NULL, s);
+
                   tempOpCode = returnMachineCodeForMnemonic(token);
+                  // printf("%s %s\n", token, tempOpCode);
 
                   if(strcmp(tempOpCode, "GG") == 0)
                   {
@@ -247,22 +252,57 @@ void second_pass_process_line(char* line, int lineNo)
                   }
                   else
                   {
-                    // printf("Recieved opCode from returnMachineCodeForMnemonic() for %s is %s.\n", token, tempOpCode);
+                    // valid mnemonic found
+                    // printf("valid mnemonic found\n");
 
+                    // strtok placed at top due to issues with returnMachineCodeForMnemonic()
+                    token = thirdToken;
 
+                    // increment token number
+                    tokenNo++;
 
-                    saveOutfileReturn = saveOutfile(tempOpCode);
+                    printf("%s %d\n", token, tokenNo);
 
-                    if(saveOutfileReturn == 1)
+                    if(token != NULL && tokenNo == 3)
                     {
-                      // printf("%d\n", saveOutfileReturn);
-                    }
-                    else
-                    {
-                      //Error in saveOutfile()
+                      returnedObject = returnAddressIfExisitingLabel(token);
+                      printf("resultFlag obtained is %d. address obtained is %s\n", returnedObject.resultFlag, returnedObject.line);
 
-                      // request to terminate assembly
-                      assemblerProgram = -1;
+                      if(returnedObject.line != NULL)
+                      {
+                        if(returnedObject.resultFlag != -1)
+                        {
+                          strcpy(outLine, tempOpCode);
+                          strcat(outLine, returnedObject.line);
+
+                          // save to outfile
+                          saveOutfileReturn = saveOutfile(outLine);
+
+                          if(saveOutfileReturn == 1)
+                          {
+                            // printf("%d\n", saveOutfileReturn);
+                          }
+                          else
+                          {
+                            //Error in saveOutfile()
+
+                            // request to terminate assembly
+                            assemblerProgram = -1;
+                          }
+                        }
+                        else
+                        {
+                          // request to terminate assembly
+                          assemblerProgram = -1;
+                        }
+                      }
+                      else
+                      {
+                        printf("Error: NULL address recieved from returnAddressIfExisitingLabel().\n");
+                        
+                        // request to terminate assembly
+                        assemblerProgram = -1;
+                      }
                     }
                   }
                 }
@@ -332,7 +372,7 @@ void second_pass()
 {
   int lineNo = 1;
 
-  INTERMEDIATE_READ_LINE_RETURN obtainStruct;
+  INTERMEDIATE_READ_LINE_RETURN_OBJECT obtainStruct;
 
   obtainStruct = intermediate_read_line(lineNo, assemblerProgram);
 
