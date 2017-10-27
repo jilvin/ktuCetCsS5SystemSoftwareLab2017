@@ -84,7 +84,7 @@ void second_pass_process_line(char* line, int lineNo)
   RETURN_ADDRESS_IF_EXISTING_LABEL_RETURN_OBJECT returnedObject;
   int len, tokenNo=1, totalTokenCount, saveOutfileReturn;
   const char s[2] = " ";
-  char *token, *thirdToken;
+  char *token, *lastToken;
   char* tempOpCode = NULL;
   char outLine[6];
 
@@ -232,7 +232,7 @@ void second_pass_process_line(char* line, int lineNo)
                 else
                 {
                   // obtain next token from the read line
-                  thirdToken = strtok(NULL, s);
+                  lastToken = strtok(NULL, s);
 
                   tempOpCode = returnMachineCodeForMnemonic(token);
                   // printf("%s %s\n", token, tempOpCode);
@@ -256,7 +256,7 @@ void second_pass_process_line(char* line, int lineNo)
                     // printf("valid mnemonic found\n");
 
                     // strtok placed at top due to issues with returnMachineCodeForMnemonic()
-                    token = thirdToken;
+                    token = lastToken;
 
                     // increment token number
                     tokenNo++;
@@ -329,8 +329,11 @@ void second_pass_process_line(char* line, int lineNo)
                 }
                 else
                 {
-                  // printf("%s\n", token);
+                  // obtain next token from the read line
+                  lastToken = strtok(NULL, s);
+
                   tempOpCode = returnMachineCodeForMnemonic(token);
+                  // printf("%s %s\n", token, tempOpCode);
 
                   if(strcmp(tempOpCode, "GG") == 0)
                   {
@@ -345,8 +348,68 @@ void second_pass_process_line(char* line, int lineNo)
                     // request to terminate assembly
                     assemblerProgram = -1;
                   }
+                  else
+                  {
+                    // valid mnemonic found
+                    // printf("valid mnemonic found\n");
 
-                  // printf("Recieved opCode from returnMachineCodeForMnemonic() for %s is %s.\n", token, tempOpCode);
+                    // strtok placed at top due to issues with returnMachineCodeForMnemonic()
+                    token = lastToken;
+
+                    // increment token number
+                    tokenNo++;
+
+                    // printf("%s %d\n", token, tokenNo);
+
+                    if(token != NULL && tokenNo == 2)
+                    {
+                      // deletion of \n at the end of line
+                      char *newtoken = strchr( token, '\n' );
+                      if ( newtoken )
+                      *newtoken = 0;
+
+                      // printf("prints token: %s\n", token);
+
+                      returnedObject = returnAddressIfExisitingLabel(token);
+                      printf("label %s. resultFlag obtained is %d. address obtained is %s.\n", token, returnedObject.resultFlag, returnedObject.line);
+
+                      if(returnedObject.line != NULL)
+                      {
+                        if(returnedObject.resultFlag != -1)
+                        {
+                          strcpy(outLine, tempOpCode);
+                          strcat(outLine, returnedObject.line);
+
+                          // save to outfile
+                          saveOutfileReturn = saveOutfile(outLine);
+
+                          if(saveOutfileReturn == 1)
+                          {
+                            // printf("%d\n", saveOutfileReturn);
+                          }
+                          else
+                          {
+                            //Error in saveOutfile()
+
+                            // request to terminate assembly
+                            assemblerProgram = -1;
+                          }
+                        }
+                        else
+                        {
+                          // request to terminate assembly
+                          assemblerProgram = -1;
+                        }
+                      }
+                      else
+                      {
+                        printf("Error: NULL address recieved from returnAddressIfExisitingLabel().\n");
+
+                        // request to terminate assembly
+                        assemblerProgram = -1;
+                      }
+                    }
+                  }
                 }
               }
             }
