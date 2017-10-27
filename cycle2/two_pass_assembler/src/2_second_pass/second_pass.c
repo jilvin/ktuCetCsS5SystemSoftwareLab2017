@@ -21,7 +21,6 @@
 // 2 - END found
 int assemblerProgram = 0;
 int startAddress = 0;
-int lineCount=0;
 
 // 1 - successfull save to file
 // -1 - error occurred during saveOutfile
@@ -86,7 +85,7 @@ void second_pass_process_line(char* line, int lineNo)
   const char s[2] = " ";
   char *token, *lastToken;
   char* tempOpCode = NULL;
-  char outLine[6];
+  char outLine[7];
 
   // obtain length of line
   len = strlen(line);
@@ -186,10 +185,48 @@ void second_pass_process_line(char* line, int lineNo)
                     if(strncmp(token, "C\'", 2) == 0)
                     {
                       // printf("Found character input in line.\n");
+
+                      // printf("%s", token);
+
+                      char* p;
+
+                      p = strchr(token, '\'');
+
+                      sprintf(outLine, "%02X%02X%02X", p[1], p[2], p[3]);
+
+                      // save to outfile
+                      saveOutfileReturn = saveOutfile(outLine);
+
+                      if(saveOutfileReturn == 1)
+                      {
+                        // printf("%d\n", saveOutfileReturn);
+                      }
+                      else
+                      {
+                        //Error in saveOutfile()
+
+                        // request to terminate assembly
+                        assemblerProgram = -1;
+                      }
                     }
                     else if(strncmp(token, "X\'", 2) == 0)
                     {
                       // printf("Found input device id in line.\n");
+
+                      char* p;
+                      int i=1, j=0;
+
+                      p = strchr(token, '\'');
+
+                      while(p[i] != '\'' && j<7)
+                      {
+                        outLine[j] = p[i];
+                        i++;
+                        j++;
+                      }
+
+                      // save to outfile
+                      saveOutfileReturn = saveOutfile(outLine);
                     }
                   }
                 }
@@ -203,6 +240,24 @@ void second_pass_process_line(char* line, int lineNo)
 
                   if(token != NULL && tokenNo == 3)
                   {
+                    int value = atoi(token);
+
+                    sprintf(outLine, "%06X", value);
+
+                    // save to outfile
+                    saveOutfileReturn = saveOutfile(outLine);
+
+                    if(saveOutfileReturn == 1)
+                    {
+                      // printf("%d\n", saveOutfileReturn);
+                    }
+                    else
+                    {
+                      //Error in saveOutfile()
+
+                      // request to terminate assembly
+                      assemblerProgram = -1;
+                    }
                   }
                 }
                 else if(strcmp(token, "RESW") == 0)
@@ -240,7 +295,7 @@ void second_pass_process_line(char* line, int lineNo)
                   if(strcmp(tempOpCode, "GG") == 0)
                   {
                     // Invalid mnemonic found
-                    printf("Error: Invalid mnemonic found on line %d\n", lineCount);
+                    printf("Error: Invalid mnemonic found on line %d\n", lineNo);
                     assemblerProgram = -1;
                   }
                   else if(strcmp(tempOpCode, "HH") == 0)
@@ -273,7 +328,7 @@ void second_pass_process_line(char* line, int lineNo)
                       // printf("prints token: %s\n", token);
 
                       returnedObject = returnAddressIfExisitingLabel(token);
-                      printf("label %s. resultFlag obtained is %d. address obtained is %s.\n", token, returnedObject.resultFlag, returnedObject.line);
+                      // printf("label %s. resultFlag obtained is %d. address obtained is %s.\n", token, returnedObject.resultFlag, returnedObject.line);
 
                       if(returnedObject.line != NULL)
                       {
@@ -320,7 +375,7 @@ void second_pass_process_line(char* line, int lineNo)
               if(tokenNo == 1)
               {
                 // line without label or direct value declaration
-                // printf("Line %d: 2 tokens found.\n", lineCount);
+                // printf("Line %d: 2 tokens found.\n", lineNo);
 
                 if(strcmp(token, "END") == 0)
                 {
@@ -338,7 +393,7 @@ void second_pass_process_line(char* line, int lineNo)
                   if(strcmp(tempOpCode, "GG") == 0)
                   {
                     // Invalid mnemonic found
-                    printf("Error: Invalid mnemonic found on line %d\n", lineCount);
+                    printf("Error: Invalid mnemonic found on line %d\n", lineNo);
                     assemblerProgram = -1;
                   }
                   else if(strcmp(tempOpCode, "HH") == 0)
@@ -371,7 +426,7 @@ void second_pass_process_line(char* line, int lineNo)
                       // printf("prints token: %s\n", token);
 
                       returnedObject = returnAddressIfExisitingLabel(token);
-                      printf("label %s. resultFlag obtained is %d. address obtained is %s.\n", token, returnedObject.resultFlag, returnedObject.line);
+                      // printf("label %s. resultFlag obtained is %d. address obtained is %s.\n", token, returnedObject.resultFlag, returnedObject.line);
 
                       if(returnedObject.line != NULL)
                       {
@@ -415,6 +470,53 @@ void second_pass_process_line(char* line, int lineNo)
             }
             else if(totalTokenCount == 1)
             {
+              if(tokenNo == 1)
+              {
+                // deletion of \n at the end of line
+                char *newtoken = strchr( token, '\n' );
+                if ( newtoken )
+                *newtoken = 0;
+
+                tempOpCode = returnMachineCodeForMnemonic(token);
+                // printf("%s %s\n", token, tempOpCode);
+
+                if(strcmp(tempOpCode, "GG") == 0)
+                {
+                  // Invalid mnemonic found
+                  printf("Error: Invalid mnemonic found on line %d\n", lineNo);
+                  assemblerProgram = -1;
+                }
+                else if(strcmp(tempOpCode, "HH") == 0)
+                {
+                  // Error encountered in returnMachineCodeForMnemonic()
+
+                  // request to terminate assembly
+                  assemblerProgram = -1;
+                }
+                else
+                {
+                  // valid mnemonic found
+                  // printf("valid mnemonic found\n");
+
+                  strcpy(outLine, tempOpCode);
+                  strcat(outLine, "0000");
+
+                  // save to outfile
+                  saveOutfileReturn = saveOutfile(outLine);
+
+                  if(saveOutfileReturn == 1)
+                  {
+                    // printf("%d\n", saveOutfileReturn);
+                  }
+                  else
+                  {
+                    //Error in saveOutfile()
+
+                    // request to terminate assembly
+                    assemblerProgram = -1;
+                  }
+                }
+              }
             }
 
             // obtain next token from the read line
