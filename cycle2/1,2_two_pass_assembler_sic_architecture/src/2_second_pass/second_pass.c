@@ -46,7 +46,7 @@ int saveOutfile(char* line)
   else
   {
     // appending line on to OUTFILE
-    fprintf(outfilefp, "%s\n", line);
+    fprintf(outfilefp, "%s", line);
 
     // close FILE pointer
     fclose(outfilefp);
