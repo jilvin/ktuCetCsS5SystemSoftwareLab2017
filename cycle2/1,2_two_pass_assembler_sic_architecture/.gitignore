@@ -1,0 +1,4 @@
+*.h.gch
+files/temp/
+!files/temp/.gitkeep
+OUTFILE
