@@ -6,11 +6,20 @@
 
 int array[2];
 
+// resultFlag - 1 : label found
+// resultFlag - 0 : label not found
+// resultFlag - -1 : error occurred
 RETURN_ADDRESS_IF_EXISTING_LABEL_RETURN_OBJECT returnAddressIfExisitingLabel(char* label)
 {
   RETURN_ADDRESS_IF_EXISTING_LABEL_RETURN_OBJECT returnStruct;
   char cwd[1024];
+  char *line = NULL;
+  size_t len = 0;
+  ssize_t read;
+  char *token;
+  const char s[2] = " ";
   FILE *sysfp;
+  int labelFound = 0;
 
   // open FILE pointer
   sysfp = fopen("files/temp/SYSTAB", "a+");
@@ -36,10 +45,87 @@ RETURN_ADDRESS_IF_EXISTING_LABEL_RETURN_OBJECT returnAddressIfExisitingLabel(cha
   }
   else
   {
+    if((read = getline(&line, &len, sysfp)) != -1)
+    {
+      // printf("Retrieved line of length %zu :\n", read);
+      // printf("%s", line);
+
+      // deletion of \n at the end of line
+      char *newline = strchr( line, '\n' );
+      if ( newline )
+      *newline = 0;
+
+      // get first token
+      token = strtok(line, s);
+
+      if(strcmp(token, label) == 0)
+      {
+        // label found
+        labelFound = 1;
+
+        // obtain next token from the read line
+        token = strtok(NULL, s);
+
+        returnStruct.resultFlag = 1;
+        returnStruct.line = token;
+
+        // close FILE pointer
+        fclose(sysfp);
+
+        return returnStruct;
+      }
+
+      while ((read = getline(&line, &len, sysfp)) != -1 && labelFound == 0)
+      {
+        // printf("Retrieved line of length %zu :\n", read);
+        // printf("%s", line);
+
+        // deletion of \n at the end of line
+        char *newline = strchr( line, '\n' );
+        if ( newline )
+        *newline = 0;
+
+        // get first token
+        token = strtok(line, s);
+
+        // printf("%s %s\n", token, label);
+        if(strcmp(token, label) == 0)
+        {
+          // label found
+          labelFound = 1;
+
+          // obtain next token from the read line
+          token = strtok(NULL, s);
+
+          returnStruct.resultFlag = 1;
+          returnStruct.line = token;
+
+          // close FILE pointer
+          fclose(sysfp);
+
+          return returnStruct;
+        }
+      }
+
+      if(labelFound == 0)
+      {
+        // close FILE pointer
+        fclose(sysfp);
+
+        returnStruct.resultFlag = 0;
+        returnStruct.line = NULL;
+
+        return returnStruct;
+      }
+    }
+
     // close FILE pointer
     fclose(sysfp);
 
-    returnStruct.resultFlag = 1;
+    // Unexpected error
+    printf("Error: Unexpected error occurred in SYSTAB.c\n");
+
+    returnStruct.resultFlag = -1;
     returnStruct.line = NULL;
 
     return returnStruct;

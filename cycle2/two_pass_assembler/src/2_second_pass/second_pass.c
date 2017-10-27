@@ -261,12 +261,19 @@ void second_pass_process_line(char* line, int lineNo)
                     // increment token number
                     tokenNo++;
 
-                    printf("%s %d\n", token, tokenNo);
+                    // printf("%s %d\n", token, tokenNo);
 
                     if(token != NULL && tokenNo == 3)
                     {
+                      // deletion of \n at the end of line
+                      char *newtoken = strchr( token, '\n' );
+                      if ( newtoken )
+                      *newtoken = 0;
+
+                      // printf("prints token: %s\n", token);
+
                       returnedObject = returnAddressIfExisitingLabel(token);
-                      printf("resultFlag obtained is %d. address obtained is %s\n", returnedObject.resultFlag, returnedObject.line);
+                      printf("label %s. resultFlag obtained is %d. address obtained is %s.\n", token, returnedObject.resultFlag, returnedObject.line);
 
                       if(returnedObject.line != NULL)
                       {
@@ -299,7 +306,7 @@ void second_pass_process_line(char* line, int lineNo)
                       else
                       {
                         printf("Error: NULL address recieved from returnAddressIfExisitingLabel().\n");
-                        
+
                         // request to terminate assembly
                         assemblerProgram = -1;
                       }
@@ -378,7 +385,7 @@ void second_pass()
 
   while(obtainStruct.line != NULL && assemblerProgram != -1)
   {
-    printf("%s", obtainStruct.line);
+    // printf("%s", obtainStruct.line);
 
     second_pass_process_line(obtainStruct.line, lineNo);
 
@@ -397,8 +404,8 @@ void second_pass()
   }
   else if(assemblerProgram == 2)
   {
-    // first pass completed successfully.
-    printf("First pass completed successfully.\n");
+    // second pass completed successfully.
+    printf("Second pass completed successfully.\n");
   }
 }
 
